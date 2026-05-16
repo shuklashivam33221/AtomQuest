@@ -20,6 +20,9 @@
     "sonner": "^2.0.7",
     "zod": "^4.4.3"
   },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
