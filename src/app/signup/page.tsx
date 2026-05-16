@@ -83,8 +83,8 @@ export default function SignupPage() {
             </div>
             <span className={styles.logoText}>AtomQuest</span>
           </Link>
-          <h1 className={styles.brandingTitle}>Join the leading OKR Platform</h1>
-          <p className={styles.brandingSub}>Start aligning your strategy and execution today with a free 14-day trial.</p>
+          <h1 className={styles.brandingTitle}>Internal Strategy & Goal Portal</h1>
+          <p className={styles.brandingSub}>Align your departmental objectives with the company vision. Access restricted to Atomberg employees only.</p>
         </div>
       </div>
 

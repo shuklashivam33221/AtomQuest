@@ -28,14 +28,14 @@ export default async function Home() {
         </Link>
 
         <div className={styles.navLinks}>
-          <Link href="#features" className={styles.navLink}>Product</Link>
-          <Link href="#solutions" className={styles.navLink}>Solutions</Link>
-          <Link href="#pricing" className={styles.navLink}>Pricing</Link>
+          <Link href="#features" className={styles.navLink}>Features</Link>
+          <Link href="#objectives" className={styles.navLink}>Company OKRs</Link>
+          <Link href="#help" className={styles.navLink}>Support</Link>
         </div>
 
         <div className={styles.navAuth}>
-          <Link href="/login" className={styles.loginBtn}>Log In</Link>
-          <Link href="/signup" className={styles.signupBtn}>Sign Up Free</Link>
+          <Link href="/login" className={styles.loginBtn}>Sign In</Link>
+          <Link href="/signup" className={styles.signupBtn}>Request Access</Link>
         </div>
       </nav>
 
@@ -50,8 +50,8 @@ export default async function Home() {
           track progress in real-time, and drive a culture of high performance across all departments.
         </p>
         <div className={styles.ctaGroup}>
-          <Link href="/signup" className={styles.primaryCta}>Get Started Free</Link>
-          <Link href="/login" className={styles.secondaryCta}>Log In to Dashboard</Link>
+          <Link href="/login" className={styles.primaryCta}>Sign In to Dashboard</Link>
+          <Link href="/signup" className={styles.secondaryCta}>Internal Registration</Link>
         </div>
 
         <div className={styles.heroImageMockup}>
@@ -162,10 +162,10 @@ export default async function Home() {
           
           <div className={styles.footerLinks}>
             <div className={styles.linkGroup}>
-              <h4>Product</h4>
-              <Link href="#features">Features</Link>
-              <Link href="/login">Dashboard</Link>
-              <Link href="/signup">Sign Up</Link>
+              <h4>Portal</h4>
+              <Link href="#features">Internal Docs</Link>
+              <Link href="/login">Employee Login</Link>
+              <Link href="/signup">Registration</Link>
             </div>
             <div className={styles.linkGroup}>
               <h4>Company</h4>
