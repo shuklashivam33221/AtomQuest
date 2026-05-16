@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum GoalPhase {
+  GOAL_SETTING
+  Q1
+  Q2
+  Q3
+  Q4
+  ANNUAL
+}
+
+enum UoMType {
+  NUMERIC_MIN // Higher is better
+  NUMERIC_MAX // Lower is better
+  PERCENTAGE_MIN
+  PERCENTAGE_MAX
+  TIMELINE
+  ZERO
+}
+
+enum GoalStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  LOCKED
+  RETURNED
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  password      String
+  role          Role        @default(EMPLOYEE)
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+  managerId     String?
+  manager       User?       @relation("ManagerToEmployee", fields: [managerId], references: [id])
+  subordinates  User[]      @relation("ManagerToEmployee")
+  goals         Goal[]
+  checkIns      CheckIn[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Department {
+  id    String @id @default(cuid())
+  name  String @unique
+  users User[]
+}
+
+model GoalCycle {
+  id        String    @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  phase     GoalPhase @default(GOAL_SETTING)
+  isActive  Boolean   @default(true)
+  goals     Goal[]
+}
+
+model Goal {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  thrustArea   String
+  uom          UoMType
+  target       Float?
+  targetDate   DateTime?   // For Timeline UoM
+  weightage    Int
+  status       GoalStatus  @default(DRAFT)
+  employeeId   String
+  employee     User        @relation(fields: [employeeId], references: [id])
+  cycleId      String
+  cycle        GoalCycle   @relation(fields: [cycleId], references: [id])
+  isShared     Boolean     @default(false)
+  sharedFromId String?
+  achievements Achievement[]
+  checkIns     CheckIn[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Achievement {
+  id             String         @id @default(cuid())
+  goalId         String
+  goal           Goal           @relation(fields: [goalId], references: [id])
+  quarter        GoalPhase      // Q1, Q2, Q3, Q4
+  actualValue    Float?
+  completionDate DateTime?
+  progressStatus ProgressStatus @default(NOT_STARTED)
+  updatedAt      DateTime       @updatedAt
+}
+
+model CheckIn {
+  id             String    @id @default(cuid())
+  goalId         String
+  goal           Goal      @relation(fields: [goalId], references: [id])
+  quarter        GoalPhase
+  managerComment String
+  checkinDate    DateTime  @default(now())
+  managerId      String
+  manager        User      @relation(fields: [managerId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id])
+  field     String
+  oldValue  String?
+  newValue  String?
+  changedBy String
+  changedAt DateTime @default(now())
+}
