@@ -8,8 +8,8 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Allow public routes
-  const publicRoutes = ["/login", "/api/auth"];
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
+  const publicRoutes = ["/", "/login", "/api/auth"];
+  const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith("/login") || pathname.startsWith("/api/auth"));
 
   if (isPublicRoute) {
     return NextResponse.next();

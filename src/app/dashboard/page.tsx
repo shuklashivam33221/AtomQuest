@@ -1,165 +1,383 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Calendar, Target, AlertCircle, CheckCircle, Heart, Zap, FileText, Users } from "lucide-react";
+import { Target, CheckCircle, Clock, AlertCircle, Users, Settings, Shield } from "lucide-react";
 import styles from "./page.module.css";
 
 export const metadata = {
-  title: "Dashboard - Atomberg HR",
+  title: "Dashboard - AtomQuest",
 };
 
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
+  const userId = session.user.id;
+  const userRole = (session.user as any).role;
+
+  if (userRole === "EMPLOYEE") {
+    return <EmployeeDashboard userId={userId} />;
+  } else if (userRole === "MANAGER") {
+    return <ManagerDashboard userId={userId} />;
+  } else {
+    return <AdminDashboard />;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   EMPLOYEE DASHBOARD
+   Shows: My goals summary, weightage status, 
+   recent activity on my goals
+   ═══════════════════════════════════════════ */
+async function EmployeeDashboard({ userId }: { userId: string }) {
+  const activeCycle = await prisma.goalCycle.findFirst({ where: { isActive: true } });
+
+  const goals = activeCycle
+    ? await prisma.goal.findMany({
+        where: { employeeId: userId, cycleId: activeCycle.id },
+        include: { achievements: true },
+        orderBy: { createdAt: "asc" },
+      })
+    : [];
+
+  const totalWeightage = goals.reduce((sum, g) => sum + g.weightage, 0);
+  const lockedCount = goals.filter((g: any) => g.status === "LOCKED").length;
+  const draftCount = goals.filter((g: any) => g.status === "DRAFT").length;
+  const submittedCount = goals.filter((g: any) => g.status === "SUBMITTED").length;
+  const returnedCount = goals.filter((g: any) => g.status === "RETURNED").length;
+
   return (
     <div className={styles.container}>
-      {/* ── Header Section ── */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Executive Overview</h1>
-          <div className={styles.cycleInfo}>
-            <Calendar size={14} />
-            Performance Cycle: <span className={styles.cycleStrong}>Q3 2026</span>
-          </div>
+          <h1 className={styles.title}>My Dashboard</h1>
+          <p className={styles.subtitle}>
+            {activeCycle
+              ? `${activeCycle.name} — Phase: ${activeCycle.phase}`
+              : "No active goal cycle"}
+          </p>
         </div>
         <div className={styles.actions}>
-          <button className="btn btn-secondary">Write Praise</button>
-          <button className="btn btn-primary">Update My Goals</button>
+          <a href="/dashboard/goals" className="btn btn-primary">
+            {goals.length === 0 ? "Create Goals" : "View My Goals"}
+          </a>
         </div>
       </div>
 
-      {/* ── Top Metric Cards ── */}
+      {/* Stat Cards */}
       <div className={styles.statsGrid}>
-        {/* Card 1: Company Progress */}
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
-            <span className={styles.statLabel}><Target size={14} /> COMPANY PROGRESS</span>
-            <span className={styles.badgeSuccess}>+5%</span>
+            <span className={styles.statLabel}><Target size={14} /> TOTAL GOALS</span>
           </div>
-          <div className={styles.statValue}>68%</div>
+          <div className={styles.statValue}>{goals.length}</div>
+          <div className={styles.statContext}>of max 8 goals</div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><CheckCircle size={14} /> WEIGHTAGE</span>
+          </div>
+          <div className={styles.statValue}>
+            {totalWeightage}%
+          </div>
           <div className={styles.progressBarBg}>
-            <div className={styles.progressBarFill} style={{ width: "68%" }} />
+            <div
+              className={`${styles.progressBarFill} ${totalWeightage === 100 ? styles.progressComplete : ""}`}
+              style={{ width: `${Math.min(totalWeightage, 100)}%` }}
+            />
           </div>
+          <div className={styles.statContext}>{totalWeightage === 100 ? "Complete" : `${100 - totalWeightage}% remaining`}</div>
         </div>
 
-        {/* Card 2: At Risk Goals */}
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
-            <span className={styles.statLabel}><AlertCircle size={14} /> AT RISK GOALS</span>
+            <span className={styles.statLabel}><Clock size={14} /> PENDING</span>
           </div>
-          <div className={`${styles.statValue} ${styles.textWarning}`}>12</div>
-          <div className={styles.statContext}>3 blocked by dependencies</div>
+          <div className={`${styles.statValue} ${submittedCount > 0 ? styles.textInfo : ""}`}>
+            {submittedCount}
+          </div>
+          <div className={styles.statContext}>Awaiting manager approval</div>
         </div>
 
-        {/* Card 3: Check-in Rate */}
         <div className={styles.statCard}>
           <div className={styles.statHeader}>
-            <span className={styles.statLabel}><CheckCircle size={14} /> CHECK-IN RATE</span>
+            <span className={styles.statLabel}><AlertCircle size={14} /> STATUS</span>
           </div>
-          <div className={styles.statValue}>94%</div>
-          <div className={styles.statContextFlex}>
-            <div className={styles.avatarsList}>
-              <div className={styles.miniAvatar}>JD</div>
-              <div className={styles.miniAvatar}>AS</div>
-              <div className={styles.miniAvatar}>MR</div>
-            </div>
-            <span>4 pending</span>
+          <div className={styles.statusBreakdown}>
+            {draftCount > 0 && <span className={styles.miniTag}>Draft: {draftCount}</span>}
+            {submittedCount > 0 && <span className={`${styles.miniTag} ${styles.tagBlue}`}>Submitted: {submittedCount}</span>}
+            {lockedCount > 0 && <span className={`${styles.miniTag} ${styles.tagGreen}`}>Locked: {lockedCount}</span>}
+            {returnedCount > 0 && <span className={`${styles.miniTag} ${styles.tagRed}`}>Returned: {returnedCount}</span>}
+            {goals.length === 0 && <span className={styles.miniTag}>No goals yet</span>}
           </div>
-        </div>
-
-        {/* Card 4: Team Pulse */}
-        <div className={styles.statCard}>
-          <div className={styles.statHeader}>
-            <span className={styles.statLabel}><Heart size={14} /> TEAM PULSE</span>
-            <span className={styles.badgeSoftSuccess}>Great</span>
-          </div>
-          <div className={styles.statValue}>8.4<span className={styles.statSubValue}>/10</span></div>
-          <div className={styles.statContext}>Based on recent 1:1 sentiments</div>
         </div>
       </div>
 
-      {/* ── Bottom Section (2 Columns) ── */}
-      <div className={styles.bottomGrid}>
-        
-        {/* Left Column */}
-        <div className={styles.leftCol}>
-          <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Department Alignment</h3>
-            <p className={styles.cardSubtitle}>Progress vs Target by business unit</p>
-            
-            {/* Mock Bar Chart */}
-            <div className={styles.chartArea}>
-              <div className={styles.chartGridLines}>
-                <div className={styles.gridLine}><span>100</span></div>
-                <div className={styles.gridLine}><span>75</span></div>
-                <div className={styles.gridLine}><span>50</span></div>
-                <div className={styles.gridLine}><span>25</span></div>
-                <div className={styles.gridLine}><span>0</span></div>
-              </div>
-              <div className={styles.barsContainer}>
-                <div className={styles.barGroup}>
-                  <div className={styles.bar} style={{ height: "85%" }}></div>
-                  <span className={styles.barLabel}>Sales</span>
-                </div>
-                <div className={styles.barGroup}>
-                  <div className={styles.bar} style={{ height: "60%" }}></div>
-                  <span className={styles.barLabel}>R&D</span>
-                </div>
-                <div className={styles.barGroup}>
-                  <div className={styles.bar} style={{ height: "90%" }}></div>
-                  <span className={styles.barLabel}>Marketing</span>
-                </div>
-                <div className={styles.barGroup}>
-                  <div className={styles.bar} style={{ height: "80%" }}></div>
-                  <span className={styles.barLabel}>Operations</span>
-                </div>
-                <div className={styles.barGroup}>
-                  <div className={styles.bar} style={{ height: "70%" }}></div>
-                  <span className={styles.barLabel}>HR</span>
-                </div>
-              </div>
+      {/* Goal List Quick View */}
+      {goals.length > 0 && (
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>My Goal Sheet</h3>
+          <table className={styles.simpleTable}>
+            <thead>
+              <tr>
+                <th>Goal Title</th>
+                <th>Thrust Area</th>
+                <th>Weightage</th>
+                <th>Target</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {goals.map((goal: any) => (
+                <tr key={goal.id}>
+                  <td className={styles.goalTitleCell}>{goal.title}</td>
+                  <td><span className={styles.thrustTag}>{goal.thrustArea}</span></td>
+                  <td><strong>{goal.weightage}%</strong></td>
+                  <td>{goal.target ?? "—"}</td>
+                  <td>
+                    <span className={`${styles.statusDot} ${styles[`status${goal.status}`]}`}>
+                      {goal.status.toLowerCase().replace("_", " ")}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {goals.length === 0 && (
+        <div className={styles.emptyState}>
+          <Target size={40} />
+          <h3>No Goals Created Yet</h3>
+          <p>Start by defining your goals for the current cycle. You can create up to 8 goals with a combined weightage of 100%.</p>
+          <a href="/dashboard/goals" className="btn btn-primary" style={{ marginTop: "1rem" }}>
+            Create My Goals
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MANAGER DASHBOARD
+   Shows: Team overview, pending approvals, 
+   check-in completion status
+   ═══════════════════════════════════════════ */
+async function ManagerDashboard({ userId }: { userId: string }) {
+  const teamMembers = await prisma.user.findMany({
+    where: { managerId: userId },
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      goals: {
+        select: { status: true, weightage: true },
+      },
+    },
+  });
+
+  const pendingApprovals = teamMembers.filter(m =>
+    m.goals.some((g: any) => g.status === "SUBMITTED")
+  ).length;
+  const completedSubmissions = teamMembers.filter(m =>
+    m.goals.length > 0 && m.goals.every((g: any) => g.status === "LOCKED")
+  ).length;
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Team Dashboard</h1>
+          <p className={styles.subtitle}>Manage your direct reports, review goals, and conduct check-ins.</p>
+        </div>
+        <div className={styles.actions}>
+          <a href="/dashboard/team" className="btn btn-primary">View Full Team</a>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><Users size={14} /> DIRECT REPORTS</span>
+          </div>
+          <div className={styles.statValue}>{teamMembers.length}</div>
+          <div className={styles.statContext}>Team members</div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><AlertCircle size={14} /> PENDING APPROVALS</span>
+          </div>
+          <div className={`${styles.statValue} ${pendingApprovals > 0 ? styles.textWarning : ""}`}>
+            {pendingApprovals}
+          </div>
+          <div className={styles.statContext}>Goals awaiting your review</div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><CheckCircle size={14} /> APPROVED</span>
+          </div>
+          <div className={styles.statValue}>{completedSubmissions}</div>
+          <div className={styles.statContext}>Goal sheets locked</div>
+        </div>
+      </div>
+
+      {/* Team Summary Table */}
+      <div className={styles.card}>
+        <h3 className={styles.cardTitle}>Team Goal Status</h3>
+        <table className={styles.simpleTable}>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Goals Created</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {teamMembers.map(member => {
+              const hasSubmitted = member.goals.some((g: any) => g.status === "SUBMITTED");
+              const isLocked = member.goals.length > 0 && member.goals.every((g: any) => g.status === "LOCKED");
+              let status = "Not Started";
+              let statusClass = "";
+              if (isLocked) { status = "Approved & Locked"; statusClass = styles.tagGreen; }
+              else if (hasSubmitted) { status = "Awaiting Approval"; statusClass = styles.tagOrange; }
+              else if (member.goals.length > 0) { status = "In Draft"; statusClass = ""; }
+
+              return (
+                <tr key={member.id}>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <div className={styles.tableAvatar}>{member.name.substring(0, 2).toUpperCase()}</div>
+                      <div>
+                        <div style={{ fontWeight: 500 }}>{member.name}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{member.role.toLowerCase()}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{member.goals.length}</td>
+                  <td><span className={`${styles.miniTag} ${statusClass}`}>{status}</span></td>
+                  <td>
+                    <a href={`/dashboard/team/${member.id}`} className="btn btn-secondary" style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem" }}>
+                      Review
+                    </a>
+                  </td>
+                </tr>
+              );
+            })}
+            {teamMembers.length === 0 && (
+              <tr><td colSpan={4} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>No direct reports assigned.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN DASHBOARD
+   Shows: Cycle status, completion rates,
+   system-wide metrics
+   ═══════════════════════════════════════════ */
+async function AdminDashboard() {
+  const totalUsers = await prisma.user.count();
+  const totalGoals = await prisma.goal.count();
+  const activeCycles = await prisma.goalCycle.count({ where: { isActive: true } });
+  const submittedGoals = await prisma.goal.count({ where: { status: "SUBMITTED" } });
+  const lockedGoals = await prisma.goal.count({ where: { status: "LOCKED" } });
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Admin Dashboard</h1>
+          <p className={styles.subtitle}>System-wide overview of goal cycles, completion rates, and governance.</p>
+        </div>
+        <div className={styles.actions}>
+          <a href="/dashboard/admin" className="btn btn-primary">
+            <Settings size={16} /> Manage Cycles
+          </a>
+        </div>
+      </div>
+
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><Users size={14} /> TOTAL USERS</span>
+          </div>
+          <div className={styles.statValue}>{totalUsers}</div>
+          <div className={styles.statContext}>Active accounts</div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><Target size={14} /> TOTAL GOALS</span>
+          </div>
+          <div className={styles.statValue}>{totalGoals}</div>
+          <div className={styles.statContext}>All cycles</div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><Shield size={14} /> ACTIVE CYCLES</span>
+          </div>
+          <div className={styles.statValue}>{activeCycles}</div>
+          <div className={styles.statContext}>Ongoing programs</div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statHeader}>
+            <span className={styles.statLabel}><CheckCircle size={14} /> COMPLETION</span>
+          </div>
+          <div className={styles.statValue}>
+            {totalGoals > 0 ? Math.round((lockedGoals / totalGoals) * 100) : 0}%
+          </div>
+          <div className={styles.progressBarBg}>
+            <div
+              className={styles.progressBarFill}
+              style={{ width: `${totalGoals > 0 ? (lockedGoals / totalGoals) * 100 : 0}%` }}
+            />
+          </div>
+          <div className={styles.statContext}>{lockedGoals} of {totalGoals} goals locked</div>
+        </div>
+      </div>
+
+      <div className={styles.twoCol}>
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Goal Pipeline</h3>
+          <div className={styles.pipelineList}>
+            <div className={styles.pipelineItem}>
+              <span className={`${styles.pipeDot} ${styles.pipeGray}`}></span>
+              <span>Draft</span>
+              <strong>{totalGoals - submittedGoals - lockedGoals}</strong>
+            </div>
+            <div className={styles.pipelineItem}>
+              <span className={`${styles.pipeDot} ${styles.pipeBlue}`}></span>
+              <span>Submitted</span>
+              <strong>{submittedGoals}</strong>
+            </div>
+            <div className={styles.pipelineItem}>
+              <span className={`${styles.pipeDot} ${styles.pipeGreen}`}></span>
+              <span>Locked</span>
+              <strong>{lockedGoals}</strong>
             </div>
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className={styles.rightCol}>
-          <h3 className={styles.sectionHeading}><Zap size={16} className={styles.headingIcon} /> Your Action Items</h3>
-          
-          <div className={styles.actionCard}>
-            <div className={styles.actionTitle}>Review Marketing Q3 OKRs</div>
-            <div className={styles.actionSubtitle}>Requested by Priya Sharma</div>
-          </div>
-          
-          <div className={styles.actionCard}>
-            <div className={styles.actionTitle}>Prep for 1:1 with Rahul</div>
-            <div className={styles.actionSubtitleWarning}>Overdue by 2 days</div>
-          </div>
-
-          <h3 className={styles.sectionHeading} style={{ marginTop: "1.5rem" }}>
-            <Users size={16} className={styles.headingIcon} /> Goal Activity
-          </h3>
-          
-          <div className={styles.activityCard}>
-            <div className={styles.activityItem}>
-              <div className={styles.activityAvatar}>RV</div>
-              <div className={styles.activityContent}>
-                <p><strong>Rahul Verma</strong> updated progress on <strong>Achieve ₹50Cr revenue from new retail channels</strong></p>
-                <div className={styles.activityMeta}>
-                  <span className={styles.metaHighlight}>from 38% to 42%</span>
-                  <span className={styles.metaTime}>2 hours ago</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className={styles.activityItem}>
-              <div className={`${styles.activityAvatar} ${styles.avatarPurple}`}>SK</div>
-              <div className={styles.activityContent}>
-                <p><strong>Sarah Khan</strong> marked Key Result at risk: Complete beta testing with 100 enterprise clients</p>
-                <div className={styles.activityMetaWarning}>Blocked by supply chain delays.</div>
-                <div className={styles.metaTime}>5 hours ago</div>
-              </div>
-            </div>
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Quick Actions</h3>
+          <div className={styles.quickActions}>
+            <a href="/dashboard/admin" className="btn btn-secondary" style={{ width: "100%" }}>
+              <Settings size={16} /> Manage Goal Cycles
+            </a>
+            <a href="/dashboard/team" className="btn btn-secondary" style={{ width: "100%" }}>
+              <Users size={16} /> View All Employees
+            </a>
           </div>
         </div>
       </div>

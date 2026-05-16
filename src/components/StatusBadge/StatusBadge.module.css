@@ -1,0 +1,65 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sm {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+}
+
+/* Status Colors */
+.draft {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+.submitted {
+  background-color: #EFF6FF;
+  color: #2563EB;
+}
+
+.approved {
+  background-color: #ECFDF5;
+  color: #059669;
+}
+
+.locked {
+  background-color: #ECFDF5;
+  color: #047857;
+}
+
+.returned {
+  background-color: #FEF2F2;
+  color: #DC2626;
+}
+
+.notStarted {
+  background-color: #F3F4F6;
+  color: #9CA3AF;
+}
+
+.onTrack {
+  background-color: #ECFDF5;
+  color: #059669;
+}
+
+.completed {
+  background-color: #D1FAE5;
+  color: #047857;
+}
+
+.atRisk {
+  background-color: #FFFBEB;
+  color: #D97706;
+}
+
+.highPerformer {
+  background-color: #F0FDF4;
+  color: #16A34A;
+}

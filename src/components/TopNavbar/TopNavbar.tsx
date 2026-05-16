@@ -11,12 +11,26 @@ type TopNavbarProps = {
   userRole: string;
 };
 
-const NAV_ITEMS = [
-  { label: "Overview", href: "/dashboard" },
-  { label: "Goals & OKRs", href: "/dashboard/goals" },
-  { label: "My Team", href: "/dashboard/team" },
-  { label: "Check-ins", href: "/dashboard/checkins" },
-];
+// Role-specific navigation
+const NAV_BY_ROLE: Record<string, Array<{ label: string; href: string }>> = {
+  EMPLOYEE: [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "My Goals", href: "/dashboard/goals" },
+  ],
+  MANAGER: [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "My Goals", href: "/dashboard/goals" },
+    { label: "My Team", href: "/dashboard/team" },
+    { label: "Check-ins", href: "/dashboard/checkins" },
+  ],
+  ADMIN: [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Goals & OKRs", href: "/dashboard/goals" },
+    { label: "My Team", href: "/dashboard/team" },
+    { label: "Check-ins", href: "/dashboard/checkins" },
+    { label: "Admin", href: "/dashboard/admin" },
+  ],
+};
 
 function getInitials(name: string): string {
   return name
@@ -29,6 +43,7 @@ function getInitials(name: string): string {
 
 export default function TopNavbar({ userName, userRole }: TopNavbarProps) {
   const pathname = usePathname();
+  const navItems = NAV_BY_ROLE[userRole] || NAV_BY_ROLE.EMPLOYEE;
 
   return (
     <header className={styles.navbar}>
@@ -38,11 +53,11 @@ export default function TopNavbar({ userName, userRole }: TopNavbarProps) {
           <div className={styles.logoIcon}>
             <Target strokeWidth={2.5} />
           </div>
-          <span className={styles.logoText}>Atomberg HR</span>
+          <span className={styles.logoText}>AtomQuest</span>
         </Link>
 
         <nav className={styles.navLinks}>
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
                 ? pathname === "/dashboard"
