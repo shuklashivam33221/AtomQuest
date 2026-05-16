@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["bcrypt", "ws", "@neondatabase/serverless", "pg"],
+  allowedDevOrigins: ["192.168.56.1", "localhost"],
 };
 
 export default nextConfig;
