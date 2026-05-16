@@ -15,7 +15,7 @@ export default async function TeamPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const userRole = (session.user as any).role;
+  const userRole = (session.user as { role?: string }).role;
   if (userRole === "EMPLOYEE") {
     redirect("/dashboard");
   }

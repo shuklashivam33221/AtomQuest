@@ -1,198 +1,315 @@
 .page {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   background-color: var(--background);
+  font-family: inherit;
+  color: var(--text-primary);
 }
 
-/* ── Nav ── */
-.nav {
-  border-bottom: 1px solid var(--border);
-  background-color: var(--surface);
-}
-
-.navInner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0.875rem 2rem;
+/* ── Navbar ── */
+.marketingNav {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 1rem 4rem;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .logoFlex {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  text-decoration: none;
 }
 
 .logoIcon {
-  width: 32px;
-  height: 32px;
+  width: 2.5rem;
+  height: 2.5rem;
   background-color: var(--primary);
-  border-radius: var(--radius-full);
+  color: var(--primary-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.logoIcon svg {
-  width: 18px;
-  height: 18px;
-  color: var(--primary-foreground);
+  border-radius: var(--radius-btn);
 }
 
 .logoText {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.loginBtn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 500;
-  background-color: var(--text-primary);
-  color: white;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-}
-
-.loginBtn:hover {
-  opacity: 0.85;
-}
-
-/* ── Hero ── */
-.hero {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-}
-
-.heroInner {
-  max-width: 620px;
-  text-align: center;
-}
-
-.heroBadge {
-  display: inline-block;
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 1.5rem;
-}
-
-.heroTitle {
-  font-size: 3rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  line-height: 1.1;
-  color: var(--text-primary);
-  margin-bottom: 1.25rem;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
-.heroSub {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 2rem;
-}
-
-.heroCta {
+.navLinks {
   display: flex;
-  justify-content: center;
+  gap: 2rem;
+  align-items: center;
+}
+
+.navLink {
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--text-primary);
+}
+
+.navAuth {
+  display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
-.ctaPrimary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+.loginBtn {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signupBtn {
   background-color: var(--primary);
   color: var(--primary-foreground);
-  border-radius: var(--radius);
-  font-size: 1rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-btn);
   font-weight: 600;
   text-decoration: none;
   transition: background-color 0.2s ease;
 }
 
-.ctaPrimary:hover {
+.signupBtn:hover {
   background-color: var(--primary-dark);
 }
 
-/* ── Features ── */
-.features {
-  padding: 3rem 2rem 4rem;
-  max-width: 1100px;
+/* ── Hero Section ── */
+.heroContainer {
+  padding: 6rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 1000px;
   margin: 0 auto;
+}
+
+.heroTag {
+  background-color: rgba(253, 184, 19, 0.15);
+  color: #B47D00;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.heroTitle {
+  font-size: 4rem;
+  line-height: 1.1;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.heroTitle span {
+  color: var(--primary);
+}
+
+.heroSub {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 800px;
+  margin-bottom: 2.5rem;
+}
+
+.ctaGroup {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.primaryCta {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  padding: 1rem 2rem;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  font-size: 1.125rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.primaryCta:hover {
+  background-color: var(--primary-dark);
+}
+
+.secondaryCta {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  padding: 1rem 2rem;
+  border-radius: var(--radius-btn);
+  font-weight: 600;
+  font-size: 1.125rem;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.secondaryCta:hover {
+  background-color: var(--surface-dark);
+}
+
+.heroImageMockup {
+  margin-top: 4rem;
   width: 100%;
-}
-
-.featuresGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-}
-
-.featureCard {
+  max-width: 1000px;
+  height: 500px;
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.featureCard h3 {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0.75rem 0 0.5rem;
-}
-
-.featureCard p {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  margin: 0;
-}
-
-.featureIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius);
-  background-color: rgba(253, 184, 19, 0.12);
-  color: var(--primary-dark);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* ── Trusted By ── */
+.trustedSection {
+  padding: 4rem 2rem;
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.trustedText {
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.875rem;
+}
+
+.logos {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  flex-wrap: wrap;
+  opacity: 0.6;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+}
+
+/* ── Features Section ── */
+.featuresSection {
+  padding: 6rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.featureRow {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  margin-bottom: 8rem;
+}
+
+.featureRow:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.featureContent {
+  flex: 1;
+}
+
+.featureLabel {
+  color: var(--primary-dark);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.featureTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.featureDesc {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.featureImage {
+  flex: 1;
+  height: 400px;
+  background-color: #E5E7EB;
+  border-radius: var(--radius-card);
 }
 
 /* ── Footer ── */
 .footer {
+  background-color: #1A1A1A;
+  color: #FFFFFF;
+  padding: 4rem;
   text-align: center;
-  padding: 1.5rem;
-  border-top: 1px solid var(--border);
-  font-size: 0.8125rem;
-  color: var(--text-muted);
 }
 
+.footerTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+}
+
+.footerCta {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  padding: 1rem 2.5rem;
+  border-radius: var(--radius-btn);
+  font-weight: 700;
+  font-size: 1.125rem;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.footerCta:hover {
+  background-color: var(--primary-dark);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .heroTitle {
-    font-size: 2rem;
+  .marketingNav {
+    padding: 1rem;
   }
-  .featuresGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .navLinks {
+    display: none;
+  }
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+  .featureRow, .featureRow:nth-child(even) {
+    flex-direction: column;
+  }
+  .ctaGroup {
+    flex-direction: column;
   }
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { GoalPhase, UoMType, ProgressStatus, GoalStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -25,7 +26,7 @@ export async function createGoal(formData: FormData) {
     where: { employeeId: session.user.id, cycleId },
   });
 
-  const currentTotal = existingGoals.reduce((sum: number, g: any) => sum + g.weightage, 0);
+  const currentTotal = existingGoals.reduce((sum: number, g: { weightage: number }) => sum + g.weightage, 0);
   
   if (existingGoals.length >= 8) {
     throw new Error("Maximum 8 goals allowed per cycle");
@@ -42,7 +43,7 @@ export async function createGoal(formData: FormData) {
       title,
       description,
       thrustArea,
-      uom: uom as any,
+      uom: uom as UoMType,
       target,
       weightage,
       status: "DRAFT",
@@ -62,7 +63,7 @@ export async function submitGoals(cycleId: string) {
     where: { employeeId: session.user.id, cycleId, status: "DRAFT" },
   });
 
-  const totalWeight = goals.reduce((sum: number, g: any) => sum + g.weightage, 0);
+  const totalWeight = goals.reduce((sum: number, g: { weightage: number }) => sum + g.weightage, 0);
   if (totalWeight !== 100) {
     throw new Error(`Total weightage must be exactly 100%. Current: ${totalWeight}%`);
   }
@@ -180,7 +181,7 @@ export async function updateAchievement(
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const existing = await prisma.achievement.findFirst({
-    where: { goalId, quarter: quarter as any },
+    where: { goalId, quarter: quarter as GoalPhase },
   });
 
   if (existing) {
@@ -188,7 +189,7 @@ export async function updateAchievement(
       where: { id: existing.id },
       data: {
         actualValue,
-        progressStatus: progressStatus as any,
+        progressStatus: progressStatus as ProgressStatus,
         completionDate: progressStatus === "COMPLETED" ? new Date() : null,
       },
     });
@@ -196,9 +197,9 @@ export async function updateAchievement(
     await prisma.achievement.create({
       data: {
         goalId,
-        quarter: quarter as any,
+        quarter: quarter as GoalPhase,
         actualValue,
-        progressStatus: progressStatus as any,
+        progressStatus: progressStatus as ProgressStatus,
         completionDate: progressStatus === "COMPLETED" ? new Date() : null,
       },
     });
@@ -218,7 +219,7 @@ export async function saveCheckIn(
   await prisma.checkIn.create({
     data: {
       goalId,
-      quarter: quarter as any,
+      quarter: quarter as GoalPhase,
       managerComment: comment,
       managerId: session.user.id,
     },
@@ -229,7 +230,7 @@ export async function saveCheckIn(
 
 export async function unlockGoalsAsAdmin(employeeEmail: string, cycleId: string) {
   const session = await auth();
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
     throw new Error("Unauthorized: Admin access required");
   }
 
@@ -262,7 +263,7 @@ export async function unlockGoalsAsAdmin(employeeEmail: string, cycleId: string)
 }
 export async function createCycle(name: string, startDate: string, endDate: string) {
   const session = await auth();
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
     throw new Error("Unauthorized: Admin access required");
   }
 
@@ -287,7 +288,7 @@ export async function createCycle(name: string, startDate: string, endDate: stri
 
 export async function toggleCycleStatus(cycleId: string, isActive: boolean) {
   const session = await auth();
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
     throw new Error("Unauthorized: Admin access required");
   }
 
@@ -301,7 +302,7 @@ export async function toggleCycleStatus(cycleId: string, isActive: boolean) {
 
 export async function pushSharedGoal(title: string, uom: string, target: number | null, departmentId: string, cycleId: string) {
   const session = await auth();
-  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
     throw new Error("Unauthorized: Admin access required");
   }
 
@@ -317,10 +318,10 @@ export async function pushSharedGoal(title: string, uom: string, target: number 
   const goalsToCreate = employees.map(emp => ({
     title,
     thrustArea: "Strategic Initiative",
-    uom: uom as any,
+    uom: uom as UoMType,
     target,
     weightage: 10,
-    status: "DRAFT" as any,
+    status: "DRAFT" as GoalStatus,
     employeeId: emp.id,
     cycleId,
     isShared: true,

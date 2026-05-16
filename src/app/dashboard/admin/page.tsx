@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Settings, Shield, Activity, Share2, Unlock } from "lucide-react";
+import { Settings, Shield, Activity, Share2 } from "lucide-react";
 import styles from "../page.module.css";
 import UnlockGoalForm from "./UnlockGoalForm";
 import CycleManagerClient from "./CycleManagerClient";
@@ -15,7 +15,7 @@ export default async function AdminPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const userRole = (session.user as any).role;
+  const userRole = (session.user as { role?: string }).role;
   if (userRole !== "ADMIN") {
     redirect("/dashboard");
   }
@@ -35,17 +35,14 @@ export default async function AdminPage() {
   let totalGoals = 0;
   let lockedGoals = 0;
   let submittedGoals = 0;
-  let draftGoals = 0;
 
   if (activeCycle) {
     const cycleGoals = await prisma.goal.findMany({
       where: { cycleId: activeCycle.id }
     });
-    
     totalGoals = cycleGoals.length;
     lockedGoals = cycleGoals.filter(g => g.status === "LOCKED").length;
     submittedGoals = cycleGoals.filter(g => g.status === "SUBMITTED").length;
-    draftGoals = cycleGoals.filter(g => g.status === "DRAFT" || g.status === "RETURNED").length;
   }
 
   return (

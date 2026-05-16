@@ -18,7 +18,7 @@ export default async function DashboardLayout({
     <div className={styles.dashboardLayout}>
       <TopNavbar
         userName={session.user.name || "User"}
-        userRole={(session.user as any).role || "EMPLOYEE"}
+        userRole={(session.user as { role?: string }).role || "EMPLOYEE"}
       />
       <main className={styles.pageContainer}>{children}</main>
     </div>

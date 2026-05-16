@@ -18,7 +18,7 @@ export default async function EmployeeGoalReviewPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const userRole = (session.user as any).role;
+  const userRole = (session.user as { role?: string }).role;
   if (userRole === "EMPLOYEE") redirect("/dashboard");
 
   const employee = await prisma.user.findUnique({
@@ -56,7 +56,7 @@ export default async function EmployeeGoalReviewPage({
 
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>{employee.name}'s Goal Sheet</h1>
+          <h1 className={styles.title}>{employee.name}&apos;s Goal Sheet</h1>
           <p className={styles.cycleInfo}>
             <User size={14} /> {employee.role.toLowerCase()} · <Target size={14} style={{marginLeft: "0.5rem"}}/> {activeCycle?.name}
           </p>

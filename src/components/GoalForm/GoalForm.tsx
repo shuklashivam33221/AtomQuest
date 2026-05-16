@@ -56,7 +56,8 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
         await createGoal(formData);
         formRef.current?.reset();
         setShowForm(false);
-      } catch (e: any) {
+      } catch (err) {
+        const e = err as Error;
         setError(e.message || "Failed to create goal");
       }
     });
@@ -67,7 +68,8 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
     startTransition(async () => {
       try {
         await deleteGoal(goalId);
-      } catch (e: any) {
+      } catch (err) {
+        const e = err as Error;
         setError(e.message);
       }
     });
@@ -78,7 +80,8 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
     startTransition(async () => {
       try {
         await submitGoals(cycleId);
-      } catch (e: any) {
+      } catch (err) {
+        const e = err as Error;
         setError(e.message);
       }
     });

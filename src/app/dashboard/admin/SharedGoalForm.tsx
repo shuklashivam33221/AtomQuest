@@ -28,8 +28,9 @@ export default function SharedGoalForm({ cycleId, departments }: { cycleId: stri
         setMessage({ type: "success", text: "Successfully pushed shared goal." });
         setTitle("");
         setTarget("");
-      } catch (err: any) {
-        setMessage({ type: "error", text: err.message });
+      } catch (err) {
+        const e = err as Error;
+        setMessage({ type: "error", text: e.message });
       }
     });
   };

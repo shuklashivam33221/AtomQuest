@@ -16,7 +16,7 @@ type TeamMember = {
   id: string;
   name: string;
   role: string;
-  goals?: Goal[] | false;
+  goals: Goal[];
 };
 
 type CheckIn = {
@@ -39,7 +39,7 @@ export default function CheckinClient({
   const [isPending, startTransition] = useTransition();
 
   const activeMember = teamMembers.find(m => m.id === activeMemberId);
-  const activeGoals = activeMember?.goals || [];
+  const activeGoals = activeMember?.goals ?? [];
 
   const handleSave = () => {
     if (!comment.trim()) return;
@@ -118,7 +118,7 @@ export default function CheckinClient({
                 <div className={styles.sectionTitle}><Target size={16} style={{ color: "var(--primary)" }}/> Goal Progress: Planned vs Actual</div>
               </div>
 
-              {activeGoals === false || activeGoals.length === 0 ? (
+              {activeGoals.length === 0 ? (
                 <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", backgroundColor: "var(--background)", borderRadius: "var(--radius-md)" }}>
                   No active/locked goals for this cycle.
                 </div>
@@ -149,7 +149,7 @@ export default function CheckinClient({
               <div className={styles.notesSection}>
                 <div className={styles.sectionTitleBlack}>MANAGER CHECK-IN NOTES</div>
                 <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>
-                  Document the discussion. These notes will be saved against the employee's profile for the {activeQuarter} check-in window.
+                  Document the discussion. These notes will be saved against the employee&apos;s profile for the {activeQuarter} check-in window.
                 </p>
                 <textarea 
                   className={styles.notesArea} 

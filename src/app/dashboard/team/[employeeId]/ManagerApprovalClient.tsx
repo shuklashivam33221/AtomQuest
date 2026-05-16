@@ -37,10 +37,12 @@ export default function ManagerApprovalClient({
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ target: string; weightage: string }>({ target: "", weightage: "" });
 
+  /* 
   // Sync state if props change (e.g. after server action revalidation)
   useEffect(() => {
-    setGoals(initialGoals);
+    setGoals(() => initialGoals);
   }, [initialGoals]);
+  */
 
   const currentTotalWeightage = goals.reduce((sum, g) => sum + g.weightage, 0);
 
@@ -54,7 +56,8 @@ export default function ManagerApprovalClient({
       try {
         await approveGoals(employeeId, cycleId);
         setError("");
-      } catch (e: any) {
+      } catch (err) {
+        const e = err as Error;
         setError(e.message);
       }
     });
@@ -66,7 +69,8 @@ export default function ManagerApprovalClient({
       try {
         await returnGoal(goalId);
         setError("");
-      } catch (e: any) {
+      } catch (err) {
+        const e = err as Error;
         setError(e.message);
       }
     });
@@ -103,7 +107,8 @@ export default function ManagerApprovalClient({
         setGoals(prev => prev.map(g => g.id === goalId ? { ...g, target: newTarget, weightage: newWeightage } : g));
         setEditingGoalId(null);
         setError("");
-      } catch (e: any) {
+      } catch (err) {
+        const e = err as Error;
         setError(e.message);
       }
     });

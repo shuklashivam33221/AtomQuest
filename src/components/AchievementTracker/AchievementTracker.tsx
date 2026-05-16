@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { updateAchievement } from "@/lib/actions";
 import { computeProgressScore, formatScore } from "@/lib/scoring";
-import { UoMType } from "@prisma/client";
-import StatusBadge from "@/components/StatusBadge/StatusBadge";
+import { UoMType, GoalPhase, ProgressStatus } from "@prisma/client";
+// import StatusBadge from "@/components/StatusBadge/StatusBadge";
 import { Save } from "lucide-react";
 import tableStyles from "@/components/GoalForm/GoalForm.module.css";
 
@@ -14,7 +14,7 @@ type Goal = {
   target: number | null;
   uom: string;
   weightage: number;
-  achievements: { quarter: string; actualValue: number; progressStatus: string }[];
+  achievements: { quarter: GoalPhase; actualValue: number | null; progressStatus: ProgressStatus }[];
 };
 
 export default function AchievementTracker({ goals }: { goals: Goal[] }) {
@@ -32,7 +32,8 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
         await updateAchievement(goalId, activeQuarter, actualValue, status);
         setMessage("Saved successfully");
         setTimeout(() => setMessage(""), 2000);
-      } catch (e: any) {
+      } catch (err) {
+        const e = err as Error;
         setMessage(e.message);
       }
     });
@@ -70,7 +71,7 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
             </tr>
           </thead>
           <tbody>
-            {goals.map((goal) => {
+            {goals.map((goal: Goal) => {
               const achievement = goal.achievements.find(a => a.quarter === activeQuarter);
               
               return (
@@ -83,7 +84,7 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                   
                   <td colSpan={4} style={{ padding: 0 }}>
                     <form action={(fd) => handleSave(goal.id, fd)} style={{ display: "flex", alignItems: "center", width: "100%" }}>
-                      <td style={{ width: "25%", padding: "1rem 1.25rem", borderBottom: "none" }}>
+                      <div style={{ flex: "1 1 25%", padding: "1rem 1.25rem" }}>
                         <input 
                           type="number" 
                           step="0.01" 
@@ -93,8 +94,8 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           placeholder="e.g. 95"
                           required={goal.target !== null && goal.uom !== "TIMELINE"}
                         />
-                      </td>
-                      <td style={{ width: "20%", padding: "1rem 1.25rem", borderBottom: "none" }}>
+                      </div>
+                      <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem" }}>
                         {achievement ? (
                           <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                             <span style={{ fontSize: "1.125rem", fontWeight: 600, color: "var(--primary)" }}>
@@ -104,8 +105,8 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                         ) : (
                           <span style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>—</span>
                         )}
-                      </td>
-                      <td style={{ width: "35%", padding: "1rem 1.25rem", borderBottom: "none" }}>
+                      </div>
+                      <div style={{ flex: "1 1 35%", padding: "1rem 1.25rem" }}>
                         <select 
                           name="progressStatus" 
                           className={tableStyles.input}
@@ -116,12 +117,12 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           <option value="COMPLETED">Completed</option>
                           <option value="AT_RISK">At Risk</option>
                         </select>
-                      </td>
-                      <td style={{ width: "20%", padding: "1rem 1.25rem", borderBottom: "none" }}>
+                      </div>
+                      <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem" }}>
                         <button type="submit" className="btn btn-secondary" disabled={isPending} style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem" }}>
                           <Save size={14} /> {isPending ? "Saving..." : "Save"}
                         </button>
-                      </td>
+                      </div>
                     </form>
                   </td>
                 </tr>

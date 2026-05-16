@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Target, CheckCircle, Clock, AlertCircle, Users, Settings, Shield } from "lucide-react";
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -12,7 +13,7 @@ export default async function DashboardPage() {
   if (!session?.user?.id) return null;
 
   const userId = session.user.id;
-  const userRole = (session.user as any).role;
+  const userRole = (session.user as { role?: string }).role;
 
   if (userRole === "EMPLOYEE") {
     return <EmployeeDashboard userId={userId} />;
@@ -40,10 +41,10 @@ async function EmployeeDashboard({ userId }: { userId: string }) {
     : [];
 
   const totalWeightage = goals.reduce((sum, g) => sum + g.weightage, 0);
-  const lockedCount = goals.filter((g: any) => g.status === "LOCKED").length;
-  const draftCount = goals.filter((g: any) => g.status === "DRAFT").length;
-  const submittedCount = goals.filter((g: any) => g.status === "SUBMITTED").length;
-  const returnedCount = goals.filter((g: any) => g.status === "RETURNED").length;
+  const lockedCount = goals.filter((g: { status: string }) => g.status === "LOCKED").length;
+  const draftCount = goals.filter((g: { status: string }) => g.status === "DRAFT").length;
+  const submittedCount = goals.filter((g: { status: string }) => g.status === "SUBMITTED").length;
+  const returnedCount = goals.filter((g: { status: string }) => g.status === "RETURNED").length;
 
   return (
     <div className={styles.container}>
@@ -57,9 +58,9 @@ async function EmployeeDashboard({ userId }: { userId: string }) {
           </p>
         </div>
         <div className={styles.actions}>
-          <a href="/dashboard/goals" className="btn btn-primary">
+          <Link href="/dashboard/goals" className="btn btn-primary">
             {goals.length === 0 ? "Create Goals" : "View My Goals"}
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -128,7 +129,7 @@ async function EmployeeDashboard({ userId }: { userId: string }) {
               </tr>
             </thead>
             <tbody>
-              {goals.map((goal: any) => (
+              {goals.map((goal: { id: string; title: string; thrustArea: string; weightage: number; target: number | null; status: string }) => (
                 <tr key={goal.id}>
                   <td className={styles.goalTitleCell}>{goal.title}</td>
                   <td><span className={styles.thrustTag}>{goal.thrustArea}</span></td>
@@ -151,9 +152,9 @@ async function EmployeeDashboard({ userId }: { userId: string }) {
           <Target size={40} />
           <h3>No Goals Created Yet</h3>
           <p>Start by defining your goals for the current cycle. You can create up to 8 goals with a combined weightage of 100%.</p>
-          <a href="/dashboard/goals" className="btn btn-primary" style={{ marginTop: "1rem" }}>
+          <Link href="/dashboard/goals" className="btn btn-primary" style={{ marginTop: "1rem" }}>
             Create My Goals
-          </a>
+          </Link>
         </div>
       )}
     </div>
@@ -179,10 +180,10 @@ async function ManagerDashboard({ userId }: { userId: string }) {
   });
 
   const pendingApprovals = teamMembers.filter(m =>
-    m.goals.some((g: any) => g.status === "SUBMITTED")
+    m.goals.some((g: { status: string }) => g.status === "SUBMITTED")
   ).length;
   const completedSubmissions = teamMembers.filter(m =>
-    m.goals.length > 0 && m.goals.every((g: any) => g.status === "LOCKED")
+    m.goals.every((g: { status: string }) => g.status === "LOCKED")
   ).length;
 
   return (
@@ -193,7 +194,7 @@ async function ManagerDashboard({ userId }: { userId: string }) {
           <p className={styles.subtitle}>Manage your direct reports, review goals, and conduct check-ins.</p>
         </div>
         <div className={styles.actions}>
-          <a href="/dashboard/team" className="btn btn-primary">View Full Team</a>
+          <Link href="/dashboard/team" className="btn btn-primary">View Full Team</Link>
         </div>
       </div>
 
@@ -240,8 +241,8 @@ async function ManagerDashboard({ userId }: { userId: string }) {
           </thead>
           <tbody>
             {teamMembers.map(member => {
-              const hasSubmitted = member.goals.some((g: any) => g.status === "SUBMITTED");
-              const isLocked = member.goals.length > 0 && member.goals.every((g: any) => g.status === "LOCKED");
+              const hasSubmitted = member.goals.some((g: { status: string }) => g.status === "SUBMITTED");
+              const isLocked = member.goals.length > 0 && member.goals.every((g: { status: string }) => g.status === "LOCKED");
               let status = "Not Started";
               let statusClass = "";
               if (isLocked) { status = "Approved & Locked"; statusClass = styles.tagGreen; }
@@ -262,9 +263,9 @@ async function ManagerDashboard({ userId }: { userId: string }) {
                   <td>{member.goals.length}</td>
                   <td><span className={`${styles.miniTag} ${statusClass}`}>{status}</span></td>
                   <td>
-                    <a href={`/dashboard/team/${member.id}`} className="btn btn-secondary" style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem" }}>
+                    <Link href={`/dashboard/team/${member.id}`} className="btn btn-secondary" style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem" }}>
                       Review
-                    </a>
+                    </Link>
                   </td>
                 </tr>
               );
@@ -299,9 +300,9 @@ async function AdminDashboard() {
           <p className={styles.subtitle}>System-wide overview of goal cycles, completion rates, and governance.</p>
         </div>
         <div className={styles.actions}>
-          <a href="/dashboard/admin" className="btn btn-primary">
+          <Link href="/dashboard/admin" className="btn btn-primary">
             <Settings size={16} /> Manage Cycles
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -372,12 +373,12 @@ async function AdminDashboard() {
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Quick Actions</h3>
           <div className={styles.quickActions}>
-            <a href="/dashboard/admin" className="btn btn-secondary" style={{ width: "100%" }}>
+            <Link href="/dashboard/admin" className="btn btn-secondary" style={{ width: "100%" }}>
               <Settings size={16} /> Manage Goal Cycles
-            </a>
-            <a href="/dashboard/team" className="btn btn-secondary" style={{ width: "100%" }}>
+            </Link>
+            <Link href="/dashboard/team" className="btn btn-secondary" style={{ width: "100%" }}>
               <Users size={16} /> View All Employees
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -14,7 +14,7 @@ export default async function CheckinsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const userRole = (session.user as any).role;
+  const userRole = (session.user as { role?: string }).role;
   if (userRole === "EMPLOYEE") redirect("/dashboard");
 
   // Fetch the active cycle to only show current goals
@@ -32,9 +32,9 @@ export default async function CheckinsPage() {
       goals: activeCycle ? {
         where: { cycleId: activeCycle.id, status: "LOCKED" },
         include: { achievements: true }
-      } : false
+      } : { where: { id: "none" } }
     },
-  });
+  }) as any; // Type cast to any for simplify, since TeamMember expects Goal[] with achievements array
 
   if (teamMembers.length === 0) {
     return (

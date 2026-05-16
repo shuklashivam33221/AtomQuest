@@ -15,7 +15,7 @@ export default async function GoalsPage() {
   if (!session?.user?.id) redirect("/login");
 
   const userId = session.user.id;
-  const userRole = (session.user as any).role;
+  const userRole = (session.user as { role?: string }).role;
 
   // Active Cycle
   const activeCycle = await prisma.goalCycle.findFirst({
@@ -75,7 +75,7 @@ export default async function GoalsPage() {
       ) : (
         <div className={styles.card}>
           <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-muted)" }}>
-            <p>Managers and Admins use the "My Team" and "Admin Panel" tabs to manage goals.</p>
+            <p>Managers and Admins use the &quot;My Team&quot; and &quot;Admin Panel&quot; tabs to manage goals.</p>
           </div>
         </div>
       )}

@@ -53,7 +53,7 @@
 .statCard {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   padding: 1.25rem;
   box-shadow: var(--shadow-sm);
   display: flex;
@@ -96,8 +96,13 @@
   color: var(--text-secondary);
 }
 
-.textWarning { color: var(--warning); }
-.textInfo { color: var(--info); }
+.textWarning {
+  color: var(--warning);
+}
+
+.textInfo {
+  color: var(--info);
+}
 
 /* ── Progress Bar ── */
 .progressBarBg {
@@ -160,7 +165,7 @@
 .card {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
 }
@@ -231,11 +236,30 @@
   text-transform: capitalize;
 }
 
-.statusDRAFT { background-color: #F3F4F6; color: #6B7280; }
-.statusSUBMITTED { background-color: var(--info-bg); color: var(--info); }
-.statusAPPROVED { background-color: var(--success-bg); color: var(--success); }
-.statusLOCKED { background-color: #D1FAE5; color: #047857; }
-.statusRETURNED { background-color: var(--danger-bg); color: var(--danger); }
+.statusDRAFT {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+.statusSUBMITTED {
+  background-color: var(--info-bg);
+  color: var(--info);
+}
+
+.statusAPPROVED {
+  background-color: var(--success-bg);
+  color: var(--success);
+}
+
+.statusLOCKED {
+  background-color: #D1FAE5;
+  color: #047857;
+}
+
+.statusRETURNED {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+}
 
 /* ── Avatar in Table ── */
 .tableAvatar {
@@ -286,9 +310,17 @@
   flex-shrink: 0;
 }
 
-.pipeGray { background-color: #9CA3AF; }
-.pipeBlue { background-color: #2563EB; }
-.pipeGreen { background-color: #059669; }
+.pipeGray {
+  background-color: #9CA3AF;
+}
+
+.pipeBlue {
+  background-color: #2563EB;
+}
+
+.pipeGreen {
+  background-color: #059669;
+}
 
 /* ── Quick Actions ── */
 .quickActions {
@@ -301,7 +333,7 @@
 .emptyState {
   background-color: var(--surface);
   border: 1px dashed var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   padding: 3rem;
   display: flex;
   flex-direction: column;

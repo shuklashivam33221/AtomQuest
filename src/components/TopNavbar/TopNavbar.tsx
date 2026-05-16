@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Target, Search, Bell, LogOut } from "lucide-react";
+import { Target, Search, Bell } from "lucide-react";
 import styles from "./TopNavbar.module.css";
 
 type TopNavbarProps = {

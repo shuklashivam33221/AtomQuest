@@ -24,8 +24,9 @@ export default function UnlockGoalForm({ cycleId }: { cycleId: string }) {
         await unlockGoalsAsAdmin(email, cycleId);
         setMessage({ type: "success", text: "Successfully unlocked goal sheet." });
         setEmail("");
-      } catch (err: any) {
-        setMessage({ type: "error", text: err.message });
+      } catch (err) {
+        const e = err as Error;
+        setMessage({ type: "error", text: e.message });
       }
     });
   };
@@ -36,7 +37,7 @@ export default function UnlockGoalForm({ cycleId }: { cycleId: string }) {
         <Unlock size={16} className={styles.headingIcon} /> Emergency Goal Unlock
       </div>
       <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "1rem" }}>
-        Override a locked goal sheet to allow an employee to make mid-cycle corrections. Enter the employee's email address below.
+        Override a locked goal sheet to allow an employee to make mid-cycle corrections. Enter the employee&apos;s email address below.
       </p>
 
       <form onSubmit={handleUnlock} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
