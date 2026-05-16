@@ -2,18 +2,18 @@
   /* Brand Colors */
   --primary: #FDB813;
   --primary-dark: #E5A510;
-  --primary-foreground: #1A1A1A;
+  --primary-foreground: #111827;
 
   /* Backgrounds */
-  --background: #FAFAFA;
+  --background: #F9FAFB;
   --surface: #FFFFFF;
-  --surface-hover: #F5F5F5;
-  --sidebar-bg: #1A1A1A;
-  --sidebar-text: #FFFFFF;
+  --surface-hover: #F3F4F6;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-text: #111827;
 
   /* Text Colors */
-  --text-primary: #1A1A1A;
-  --text-secondary: #6B7280;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
   --text-muted: #9CA3AF;
   --text-on-primary: #1A1A1A;
 

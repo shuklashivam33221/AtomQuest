@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import Sidebar from "@/components/Sidebar/Sidebar";
-import TopBar from "@/components/TopBar/TopBar";
+import TopNavbar from "@/components/TopNavbar/TopNavbar";
 import styles from "./layout.module.css";
 
 export default async function DashboardLayout({
@@ -17,17 +16,11 @@ export default async function DashboardLayout({
 
   return (
     <div className={styles.dashboardLayout}>
-      <Sidebar
+      <TopNavbar
         userName={session.user.name || "User"}
         userRole={(session.user as any).role || "EMPLOYEE"}
       />
-      <div className={styles.mainContent}>
-        <TopBar
-          userName={session.user.name || "User"}
-          userRole={(session.user as any).role || "EMPLOYEE"}
-        />
-        <main className={styles.pageContainer}>{children}</main>
-      </div>
+      <main className={styles.pageContainer}>{children}</main>
     </div>
   );
 }

@@ -1,19 +1,20 @@
 .dashboardLayout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background-color: var(--background);
 }
 
-.mainContent {
+.pageContainer {
   flex: 1;
-  margin-left: 240px; /* matches sidebar width */
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  padding: 2rem 3rem;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-.pageContainer {
-  padding: 1.5rem;
-  flex: 1;
-  overflow-y: auto;
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 1rem;
+  }
 }
