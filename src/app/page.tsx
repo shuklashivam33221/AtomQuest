@@ -17,7 +17,7 @@ export default async function Home() {
 
   return (
     <div className={styles.page}>
-      
+
       {/* Navbar */}
       <nav className={styles.marketingNav}>
         <Link href="/" className={styles.logoFlex}>
@@ -26,7 +26,7 @@ export default async function Home() {
           </div>
           <span className={styles.logoText}>AtomQuest</span>
         </Link>
-        
+
         <div className={styles.navLinks}>
           <Link href="#features" className={styles.navLink}>Product</Link>
           <Link href="#solutions" className={styles.navLink}>Solutions</Link>
@@ -41,33 +41,37 @@ export default async function Home() {
 
       {/* Hero Section */}
       <section className={styles.heroContainer}>
-        <div className={styles.heroTag}>OKR & Performance Management Software</div>
+        <div className={styles.heroTag}>Next-Generation Performance Management</div>
         <h1 className={styles.heroTitle}>
-          Execute Strategy with <span>Precision</span>.
+          Empower Your Team to <span>Excel</span>.
         </h1>
         <p className={styles.heroSub}>
-          AtomQuest is the industry-leading OKR platform that helps you align your organization, 
-          track progress in real-time, and drive a culture of high performance.
+          AtomQuest is the industry-leading OKR platform designed to align your organization,
+          track progress in real-time, and drive a culture of high performance across all departments.
         </p>
         <div className={styles.ctaGroup}>
           <Link href="/signup" className={styles.primaryCta}>Get Started Free</Link>
-          <Link href="/contact" className={styles.secondaryCta}>Book a Demo</Link>
+          <Link href="/login" className={styles.secondaryCta}>Log In to Dashboard</Link>
         </div>
 
         <div className={styles.heroImageMockup}>
-          Dashboard Interface Mockup
+          <img 
+            src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&q=80&w=1200" 
+            alt="AtomQuest Corporate Strategy" 
+            className={styles.mockupImg}
+          />
         </div>
       </section>
 
       {/* Trusted By Section */}
       <section className={styles.trustedSection}>
-        <div className={styles.trustedText}>Trusted by industry leaders worldwide</div>
+        <div className={styles.trustedText}>Driving excellence at</div>
         <div className={styles.logos}>
-          <span>ACME Corp</span>
-          <span>Globex</span>
-          <span>Soylent</span>
-          <span>Initech</span>
-          <span>Umbrella</span>
+          <span>Atomberg</span>
+          <span>Engineering</span>
+          <span>Sales</span>
+          <span>Operations</span>
+          <span>HR & Admin</span>
         </div>
       </section>
 
@@ -75,35 +79,109 @@ export default async function Home() {
       <section id="features" className={styles.featuresSection}>
         <div className={styles.featureRow}>
           <div className={styles.featureContent}>
-            <div className={styles.featureLabel}>Align Teams</div>
-            <h2 className={styles.featureTitle}>Connect daily tasks to company goals</h2>
+            <div className={styles.featureLabel}>GOAL ALIGNMENT</div>
+            <h2 className={styles.featureTitle}>Connect daily tasks to company vision</h2>
             <p className={styles.featureDesc}>
-              Ensure every employee knows exactly how their work impacts the bottom line. 
-              Cascade objectives seamlessly from the C-suite down to individual contributors.
+              Ensure every employee knows exactly how their work impacts the bottom line.
+              Cascade objectives seamlessly from leadership down to individual contributors 
+              with our structured thrust areas and weightage system.
             </p>
+            <ul className={styles.featureList}>
+              <li>System-enforced validation rules</li>
+              <li>Thrust area categorization</li>
+              <li>Weightage-based accountability</li>
+            </ul>
           </div>
-          <div className={styles.featureImage}></div>
+          <div className={styles.featureImage}>
+            <img 
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=800" 
+              alt="Goal Alignment Visual" 
+              className={styles.featureImg}
+            />
+          </div>
         </div>
 
         <div className={styles.featureRow}>
           <div className={styles.featureContent}>
-            <div className={styles.featureLabel}>Track Progress</div>
+            <div className={styles.featureLabel}>PROGRESS TRACKING</div>
             <h2 className={styles.featureTitle}>Real-time visibility into execution</h2>
             <p className={styles.featureDesc}>
-              Stop waiting for quarter-end reviews. Use dynamic dashboards to monitor 
-              Key Results, identify bottlenecks early, and pivot strategy instantly.
+              Stop waiting for year-end reviews. Use dynamic dashboards to monitor
+              Key Results, identify bottlenecks early, and pivot strategy instantly
+              based on real achievement data and quarterly check-ins.
             </p>
+            <ul className={styles.featureList}>
+              <li>Quarterly progress updates</li>
+              <li>Auto-computed achievement scores</li>
+              <li>Manager check-in comments</li>
+            </ul>
           </div>
-          <div className={styles.featureImage}></div>
+          <div className={styles.featureImage}>
+            <img 
+              src="https://images.unsplash.com/photo-1543286386-713bdd548da4?auto=format&fit=crop&q=80&w=800" 
+              alt="Data Progress Tracking" 
+              className={styles.featureImg}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Value Proposition Section */}
+      <section className={styles.valueSection}>
+        <div className={styles.valueGrid}>
+          <div className={styles.valueCard}>
+            <h3>Accountability</h3>
+            <p>Weightage-based goal setting ensures focus on what truly matters for the business.</p>
+          </div>
+          <div className={styles.valueCard}>
+            <h3>Transparency</h3>
+            <p>Real-time dashboards provide managers and HR full visibility into team progress.</p>
+          </div>
+          <div className={styles.valueCard}>
+            <h3>Agility</h3>
+            <p>Quarterly check-in windows allow for mid-course corrections and consistent feedback.</p>
+          </div>
         </div>
       </section>
 
       {/* Final CTA Footer */}
       <footer className={styles.footer}>
-        <h2 className={styles.footerTitle}>Ready to transform your strategy execution?</h2>
-        <Link href="/signup" className={styles.footerCta}>Start your 14-day free trial</Link>
+        <div className={styles.footerContent}>
+          <div className={styles.footerBrand}>
+            <div className={styles.logoFlex} style={{ marginBottom: '1rem' }}>
+              <div className={styles.logoIcon}>
+                <Target strokeWidth={2.5} size={20} />
+              </div>
+              <span className={styles.logoText} style={{ color: '#fff' }}>AtomQuest</span>
+            </div>
+            <p style={{ color: '#9CA3AF', fontSize: '0.875rem', maxWidth: '300px' }}>
+              The official Goal Setting & Tracking Portal for Atomberg. 
+              Driving alignment and performance across the organization.
+            </p>
+          </div>
+          
+          <div className={styles.footerLinks}>
+            <div className={styles.linkGroup}>
+              <h4>Product</h4>
+              <Link href="#features">Features</Link>
+              <Link href="/login">Dashboard</Link>
+              <Link href="/signup">Sign Up</Link>
+            </div>
+            <div className={styles.linkGroup}>
+              <h4>Company</h4>
+              <a href="https://atomberg.com" target="_blank">About Atomberg</a>
+              <Link href="/support">Help Center</Link>
+              <Link href="/privacy">Privacy Policy</Link>
+            </div>
+          </div>
+        </div>
+        
+        <div className={styles.footerBottom}>
+          <p>© {new Date().getFullYear()} Atomberg Technologies. All rights reserved.</p>
+          <p style={{ color: '#6B7280' }}>Hackathon 1.0 Submission</p>
+        </div>
       </footer>
-      
+
     </div>
   );
 }
