@@ -91,10 +91,27 @@ export async function approveGoals(employeeId: string, cycleId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  const goalsToApprove = await prisma.goal.findMany({
+    where: { employeeId, cycleId, status: "SUBMITTED" },
+  });
+
   await prisma.goal.updateMany({
     where: { employeeId, cycleId, status: "SUBMITTED" },
     data: { status: "LOCKED" },
   });
+
+  // Create audit logs
+  if (goalsToApprove.length > 0) {
+    await prisma.auditLog.createMany({
+      data: goalsToApprove.map(g => ({
+        goalId: g.id,
+        field: "status",
+        oldValue: "SUBMITTED",
+        newValue: "LOCKED",
+        changedBy: session.user?.id || "unknown"
+      }))
+    });
+  }
 
   revalidatePath("/dashboard/team");
   revalidatePath("/dashboard/goals");
@@ -109,8 +126,48 @@ export async function returnGoal(goalId: string) {
     data: { status: "RETURNED" },
   });
 
+  await prisma.auditLog.create({
+    data: {
+      goalId,
+      field: "status",
+      oldValue: "SUBMITTED",
+      newValue: "RETURNED",
+      changedBy: session.user.id
+    }
+  });
+
   revalidatePath("/dashboard/team");
   revalidatePath("/dashboard/goals");
+}
+
+export async function editGoalAsManager(goalId: string, target: number | null, weightage: number) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const goal = await prisma.goal.findUnique({ where: { id: goalId } });
+  if (!goal) throw new Error("Goal not found");
+  if (goal.status !== "SUBMITTED") throw new Error("Only submitted goals can be edited");
+
+  if (weightage < 10) throw new Error("Minimum weightage is 10%");
+
+  await prisma.goal.update({
+    where: { id: goalId },
+    data: { target, weightage },
+  });
+
+  // Log changes
+  if (goal.target !== target) {
+    await prisma.auditLog.create({
+      data: { goalId, field: "target", oldValue: goal.target?.toString(), newValue: target?.toString(), changedBy: session.user.id }
+    });
+  }
+  if (goal.weightage !== weightage) {
+    await prisma.auditLog.create({
+      data: { goalId, field: "weightage", oldValue: goal.weightage.toString(), newValue: weightage.toString(), changedBy: session.user.id }
+    });
+  }
+
+  revalidatePath("/dashboard/team");
 }
 
 export async function updateAchievement(
@@ -168,4 +225,111 @@ export async function saveCheckIn(
   });
 
   revalidatePath("/dashboard/team");
+}
+
+export async function unlockGoalsAsAdmin(employeeEmail: string, cycleId: string) {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  const employee = await prisma.user.findUnique({ where: { email: employeeEmail } });
+  if (!employee) throw new Error("Employee not found");
+
+  const lockedGoals = await prisma.goal.findMany({
+    where: { employeeId: employee.id, cycleId, status: "LOCKED" }
+  });
+
+  if (lockedGoals.length === 0) throw new Error("No locked goals found for this employee");
+
+  await prisma.goal.updateMany({
+    where: { employeeId: employee.id, cycleId, status: "LOCKED" },
+    data: { status: "RETURNED" }, // Returned to employee for editing
+  });
+
+  // Audit log
+  await prisma.auditLog.createMany({
+    data: lockedGoals.map(g => ({
+      goalId: g.id,
+      field: "status",
+      oldValue: "LOCKED",
+      newValue: "RETURNED",
+      changedBy: session.user?.id || "admin"
+    }))
+  });
+
+  revalidatePath("/dashboard/admin");
+}
+export async function createCycle(name: string, startDate: string, endDate: string) {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  // Deactivate all existing cycles first (system assumes one active cycle at a time)
+  await prisma.goalCycle.updateMany({
+    where: { isActive: true },
+    data: { isActive: false },
+  });
+
+  await prisma.goalCycle.create({
+    data: {
+      name,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      isActive: true,
+      phase: "GOAL_SETTING",
+    },
+  });
+
+  revalidatePath("/dashboard/admin");
+}
+
+export async function toggleCycleStatus(cycleId: string, isActive: boolean) {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  await prisma.goalCycle.update({
+    where: { id: cycleId },
+    data: { isActive },
+  });
+
+  revalidatePath("/dashboard/admin");
+}
+
+export async function pushSharedGoal(title: string, uom: string, target: number | null, departmentId: string, cycleId: string) {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  // Find all employees in the department
+  const employees = await prisma.user.findMany({
+    where: { departmentId, role: "EMPLOYEE" }
+  });
+
+  if (employees.length === 0) throw new Error("No employees found in this department");
+
+  // Create a goal in each employee's sheet
+  // Default weightage to 10 (minimum). They can adjust it before submission.
+  const goalsToCreate = employees.map(emp => ({
+    title,
+    thrustArea: "Strategic Initiative",
+    uom: uom as any,
+    target,
+    weightage: 10,
+    status: "DRAFT" as any,
+    employeeId: emp.id,
+    cycleId,
+    isShared: true,
+    sharedFromId: session.user?.id
+  }));
+
+  await prisma.goal.createMany({
+    data: goalsToCreate
+  });
+
+  revalidatePath("/dashboard/admin");
 }

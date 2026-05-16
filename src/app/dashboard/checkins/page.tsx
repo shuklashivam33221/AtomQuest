@@ -17,10 +17,23 @@ export default async function CheckinsPage() {
   const userRole = (session.user as any).role;
   if (userRole === "EMPLOYEE") redirect("/dashboard");
 
-  // Fetch direct reports
+  // Fetch the active cycle to only show current goals
+  const activeCycle = await prisma.goalCycle.findFirst({
+    where: { isActive: true }
+  });
+
+  // Fetch direct reports WITH their goals and achievements for the active cycle
   const teamMembers = await prisma.user.findMany({
     where: { managerId: session.user.id },
-    select: { id: true, name: true, role: true },
+    select: { 
+      id: true, 
+      name: true, 
+      role: true,
+      goals: activeCycle ? {
+        where: { cycleId: activeCycle.id, status: "LOCKED" },
+        include: { achievements: true }
+      } : false
+    },
   });
 
   if (teamMembers.length === 0) {
@@ -38,9 +51,6 @@ export default async function CheckinsPage() {
     );
   }
 
-  // Pre-fetch checkins for the first team member to load the initial view
-  // In a real app, we'd use URL params to select the active member. 
-  // For the hackathon, we'll build it as a client component that fetches or receives data.
   const allCheckins = await prisma.checkIn.findMany({
     where: { managerId: session.user.id },
     orderBy: { checkinDate: "desc" },
