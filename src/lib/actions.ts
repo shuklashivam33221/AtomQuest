@@ -459,3 +459,20 @@ export async function simulateEntraIDSync() {
   revalidatePath("/dashboard/admin");
   return { success: true, count, message: `Successfully synchronized ${count} employee(s) from Microsoft Entra ID.` };
 }
+
+export async function requestFeedbackAction(employeeId: string, subject: string, message: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const employee = await prisma.user.findUnique({ where: { id: employeeId } });
+  if (!employee) throw new Error("Employee not found");
+
+  await sendEmail({
+    to: employee.email,
+    subject: `AtomQuest: Feedback Requested by ${session.user.name} - ${subject}`,
+    body: `Hello ${employee.name},\n\nYour manager, ${session.user.name}, has requested feedback on: "${subject}".\n\nManager's message:\n"${message}"\n\nPlease log in to the AtomQuest portal to review.`
+  });
+
+  return { success: true };
+}
+

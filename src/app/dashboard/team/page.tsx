@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Users, CheckCircle, AlertCircle, Calendar, Mail, UserSearch } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge/StatusBadge";
+import TeamActionsClient from "./TeamActionsClient";
 import styles from "../page.module.css";
 import teamStyles from "./Team.module.css";
 import TeamListClient from "./TeamListClient";
@@ -44,10 +45,14 @@ export default async function TeamPage() {
           <p className={styles.cycleInfo}>Manage direct reports, reviews, and continuous feedback.</p>
         </div>
         <div className={styles.actions}>
-          <button className="btn btn-secondary" disabled title="Coming soon">Org Chart</button>
-          <button className="btn btn-primary" disabled title="Coming soon">Request Feedback</button>
+          <TeamActionsClient 
+            teamMembers={teamMembers} 
+            managerName={session.user.name || "Manager"} 
+            managerEmail={session.user.email || ""} 
+          />
         </div>
       </div>
+
       
       {/* Team Summary Cards */}
       <div className={styles.statsGrid} style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>

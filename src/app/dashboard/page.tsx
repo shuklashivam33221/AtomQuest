@@ -183,7 +183,7 @@ async function ManagerDashboard({ userId }: { userId: string }) {
     m.goals.some((g: { status: string }) => g.status === "SUBMITTED")
   ).length;
   const completedSubmissions = teamMembers.filter(m =>
-    m.goals.every((g: { status: string }) => g.status === "LOCKED")
+    m.goals.length > 0 && m.goals.every((g: { status: string }) => g.status === "LOCKED")
   ).length;
 
   return (

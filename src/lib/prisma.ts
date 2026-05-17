@@ -5,7 +5,7 @@ import pg from "pg";
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_4gvN6HyXPshr@ep-rough-grass-apy8hjyb.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require";
+  const connectionString = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_4gvN6HyXPshr@ep-rough-grass-apy8hjyb.c-7.us-east-1.aws.neon.tech/neondb?sslmode=verify-full";
 
   const pool = new pg.Pool({
     connectionString,

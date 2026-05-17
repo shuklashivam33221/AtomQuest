@@ -122,7 +122,6 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           <option value="NOT_STARTED">Not Started</option>
                           <option value="ON_TRACK">On Track</option>
                           <option value="COMPLETED">Completed</option>
-                          <option value="AT_RISK">At Risk</option>
                         </select>
                       </div>
                       <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
