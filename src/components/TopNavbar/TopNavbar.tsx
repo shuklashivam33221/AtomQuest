@@ -22,12 +22,14 @@ const NAV_BY_ROLE: Record<string, Array<{ label: string; href: string }>> = {
     { label: "My Goals", href: "/dashboard/goals" },
     { label: "My Team", href: "/dashboard/team" },
     { label: "Check-ins", href: "/dashboard/checkins" },
+    { label: "Analytics", href: "/dashboard/analytics" },
   ],
   ADMIN: [
     { label: "Dashboard", href: "/dashboard" },
     { label: "Goals & OKRs", href: "/dashboard/goals" },
     { label: "My Team", href: "/dashboard/team" },
     { label: "Check-ins", href: "/dashboard/checkins" },
+    { label: "Analytics", href: "/dashboard/analytics" },
     { label: "Admin", href: "/dashboard/admin" },
   ],
 };
