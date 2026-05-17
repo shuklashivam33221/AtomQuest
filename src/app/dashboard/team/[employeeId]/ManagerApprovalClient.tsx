@@ -152,7 +152,7 @@ export default function ManagerApprovalClient({
             <div>
               <h3 style={{ fontSize: "1rem", fontWeight: 700, margin: "0 0 0.25rem 0", color: "var(--text-primary)" }}>Phase 2: Track Achievements</h3>
               <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", margin: 0 }}>
-                Goals are now locked. Track the employee's actual growth, view progress scores, and log your quarterly 1:1 check-in notes.
+                Goals are now locked. Track the employee&apos;s actual growth, view progress scores, and log your quarterly 1:1 check-in notes.
               </p>
             </div>
             <a 
