@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { prisma } from "./src/lib/prisma";
 import { 
   createGoal,

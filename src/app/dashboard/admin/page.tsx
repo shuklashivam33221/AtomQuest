@@ -1,14 +1,14 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Settings, Shield, Activity, Share2 } from "lucide-react";
+import { Settings, Shield, Activity, Share2, Users } from "lucide-react";
 import styles from "../page.module.css";
 import UnlockGoalForm from "./UnlockGoalForm";
 import CycleManagerClient from "./CycleManagerClient";
 import SharedGoalForm from "./SharedGoalForm";
 import OrgHierarchyManager from "./OrgHierarchyManager";
 import BroadcastRemindersForm from "./BroadcastRemindersForm";
-import { Users } from "lucide-react";
+import EscalationManagerClient from "./EscalationManagerClient";
 
 export const metadata = {
   title: "Admin Panel - Atomberg HR",
@@ -33,6 +33,37 @@ export default async function AdminPage() {
 
   const totalUsers = await prisma.user.count({ where: { role: "EMPLOYEE" } });
   const activeCycle = cycles.find(c => c.isActive);
+
+  // Ensure dynamic escalation rules exist
+  const defaultRules = [
+    { triggerType: "GOAL_SUBMISSION_PENDING", daysLimit: 5 },
+    { triggerType: "MANAGER_APPROVAL_PENDING", daysLimit: 3 },
+    { triggerType: "CHECKIN_PENDING", daysLimit: 7 },
+  ];
+
+  for (const r of defaultRules) {
+    const existing = await prisma.escalationRule.findFirst({
+      where: { triggerType: r.triggerType }
+    });
+    if (!existing) {
+      await prisma.escalationRule.create({
+        data: { triggerType: r.triggerType, daysLimit: r.daysLimit }
+      });
+    }
+  }
+
+  const escalationRules = await prisma.escalationRule.findMany({
+    orderBy: { triggerType: "asc" }
+  });
+
+  const escalationLogs = await prisma.escalationLog.findMany({
+    orderBy: { triggeredAt: "desc" },
+    include: {
+      employee: { select: { name: true, email: true } },
+      rule: true
+    },
+    take: 10
+  });
 
   // Fetch all users to map hierarchy & changer names
   const allUsers = await prisma.user.findMany({
@@ -76,7 +107,7 @@ export default async function AdminPage() {
   }
 
   // Real-time Quarterly Check-in Completion Dashboard
-  let completionList: Array<{
+  const completionList: Array<{
     employeeName: string;
     managerName: string;
     phase: string;
@@ -111,7 +142,7 @@ export default async function AdminPage() {
       employeeGoalGroups.get(empId)!.push(goal);
     }
 
-    for (const [empId, empGoals] of employeeGoalGroups.entries()) {
+    for (const [, empGoals] of employeeGoalGroups.entries()) {
       const firstGoal = empGoals[0];
       const employeeName = firstGoal.employee.name;
       const managerName = firstGoal.employee.manager?.name || "No Manager";
@@ -255,6 +286,78 @@ export default async function AdminPage() {
         </div>
       </div>
 
+      {/* Configurable Escalation Module */}
+      <div className={styles.card} style={{ marginBottom: "1.5rem" }}>
+        <div className={styles.sectionHeading} style={{ color: "var(--warning)" }}>
+          <Shield size={16} className={styles.headingIcon} /> Rule-Based Escalation Module
+        </div>
+        <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "1.5rem", marginTop: "0.5rem" }}>
+          Configure standard SLA thresholds (N days) for critical cycles. The rule-based escalation engine automatically monitors delays, progresses through multiple levels (Employee ➔ Manager ➔ Skip-Level/HR), and logs alert trails.
+        </p>
+        <EscalationManagerClient initialRules={escalationRules} />
+
+        <div className={styles.tableWrapper} style={{ maxHeight: "250px", overflowY: "auto", marginTop: "2rem" }}>
+          <h3 style={{ fontSize: "0.9375rem", fontWeight: 600, marginBottom: "1rem" }}>🔔 Live System Escalation Logs</h3>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>TRIGGERED AT</th>
+                <th>EMPLOYEE</th>
+                <th>ESCALATION RULE</th>
+                <th>CURRENT LEVEL</th>
+                <th>STATUS</th>
+                <th>LOG DETAILS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {escalationLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
+                    No escalation logs recorded yet. Run the engine to check rules!
+                  </td>
+                </tr>
+              ) : (
+                escalationLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "monospace" }}>
+                      {new Date(log.triggeredAt).toLocaleString()}
+                    </td>
+                    <td style={{ fontWeight: 500 }}>
+                      <div>{log.employee.name}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{log.employee.email}</div>
+                    </td>
+                    <td>
+                      <span className={styles.thrustTag} style={{ textTransform: "uppercase", backgroundColor: "rgba(0,0,0,0.04)" }}>
+                        {log.rule.triggerType.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 600 }}>
+                      <span style={{ 
+                        color: log.level === 1 ? "var(--info)" : log.level === 2 ? "var(--warning)" : "var(--danger)" 
+                      }}>
+                        {log.level === 1 ? "Level 1 (Employee)" : log.level === 2 ? "Level 2 (Manager)" : "Level 3 (HR / Skip)"}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={styles.thrustTag} style={{
+                        backgroundColor: log.status === "RESOLVED" ? "rgba(16, 185, 129, 0.08)" : log.status === "PENDING" ? "rgba(59, 130, 246, 0.08)" : "rgba(239, 68, 68, 0.08)",
+                        color: log.status === "RESOLVED" ? "var(--success)" : log.status === "PENDING" ? "var(--primary)" : "var(--danger)",
+                        textTransform: "capitalize"
+                      }}>
+                        {log.status}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={log.details}>
+                      {log.details}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Dynamic Org Hierarchy Control Panel */}
       <div className={styles.card} style={{ marginBottom: "1.5rem" }}>
         <div className={styles.sectionHeading}>
@@ -266,7 +369,7 @@ export default async function AdminPage() {
         <OrgHierarchyManager employees={employeesForHierarchy} managers={managersForHierarchy} />
       </div>
 
-      <div className={styles.bottomGrid} style={{ gridTemplateColumns: "1fr 1fr" }}>
+      <div className={styles.twoCol}>
         
         {/* Cycle Management */}
         <div className={styles.card}>

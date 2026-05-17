@@ -16,7 +16,7 @@ const { handlers, auth: nextAuth, signIn, signOut: nextSignOut } = NextAuth({
       issuer: `https://login.microsoftonline.com/${process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID || "common"}/v2.0`,
       profile(profile) {
         let role = "EMPLOYEE";
-        const groups = (profile as any).groups || [];
+        const groups = (profile as unknown as { groups?: string[] }).groups || [];
         if (groups.includes(process.env.AZURE_AD_ADMIN_GROUP_ID || "") || profile.email?.includes(".adm@") || profile.email?.includes("admin@")) {
           role = "ADMIN";
         } else if (groups.includes(process.env.AZURE_AD_MANAGER_GROUP_ID || "") || profile.email?.includes(".mgr@") || profile.email?.includes("manager@")) {
@@ -76,7 +76,7 @@ const { handlers, auth: nextAuth, signIn, signOut: nextSignOut } = NextAuth({
               name: user.name || "Azure User",
               email: user.email,
               password: "",
-              role: (user as any).role || "EMPLOYEE",
+              role: ((user as { role?: string }).role || "EMPLOYEE") as "EMPLOYEE" | "MANAGER" | "ADMIN",
               managerId: defaultManager?.id || null,
             },
           });
@@ -85,7 +85,7 @@ const { handlers, auth: nextAuth, signIn, signOut: nextSignOut } = NextAuth({
             where: { email: user.email },
             data: {
               name: user.name || existingUser.name,
-              role: (user as any).role || existingUser.role,
+              role: ((user as { role?: string }).role || existingUser.role) as "EMPLOYEE" | "MANAGER" | "ADMIN",
             },
           });
         }
@@ -108,6 +108,6 @@ export async function auth() {
   return nextAuth();
 }
 
-export async function signOut(...args: any[]) {
+export async function signOut(...args: Parameters<typeof nextSignOut>) {
   return nextSignOut(...args);
 }

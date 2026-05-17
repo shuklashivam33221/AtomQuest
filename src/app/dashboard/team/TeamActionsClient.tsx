@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { requestFeedbackAction } from "@/lib/actions";
-import { Users, Mail, X, Check, GitPullRequest, ArrowDown, UserPlus } from "lucide-react";
+import { Users, Mail, X, GitPullRequest, ArrowDown } from "lucide-react";
 import styles from "./TeamActions.module.css";
 
 type TeamMember = {

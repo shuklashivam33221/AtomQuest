@@ -60,6 +60,7 @@ model User {
   subordinates  User[]      @relation("ManagerToEmployee")
   goals         Goal[]
   checkIns      CheckIn[]
+  escalations   EscalationLog[] @relation("EmployeeEscalations")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -134,4 +135,26 @@ model AuditLog {
   newValue  String?
   changedBy String
   changedAt DateTime @default(now())
+}
+
+model EscalationRule {
+  id           String          @id @default(cuid())
+  triggerType  String          // GOAL_SUBMISSION_PENDING, MANAGER_APPROVAL_PENDING, CHECKIN_PENDING
+  daysLimit    Int             // N days
+  isActive     Boolean         @default(true)
+  logs         EscalationLog[]
+  createdAt    DateTime        @default(now())
+}
+
+model EscalationLog {
+  id           String          @id @default(cuid())
+  employeeId   String
+  employee     User            @relation("EmployeeEscalations", fields: [employeeId], references: [id])
+  ruleId       String
+  rule         EscalationRule  @relation(fields: [ruleId], references: [id])
+  level        Int             // 1 = Employee, 2 = Manager, 3 = HR/Skip-level
+  status       String          // PENDING, RESOLVED, ESCALATED
+  details      String
+  triggeredAt  DateTime        @default(now())
+  resolvedAt   DateTime?
 }

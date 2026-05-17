@@ -9,8 +9,9 @@ import { isPhaseActionAllowed } from "@/lib/schedule";
 function revalidatePath(path: string) {
   try {
     nextRevalidatePath(path);
-  } catch (e: any) {
-    if (e && typeof e === "object" && "message" in e && e.message.includes("static generation store missing")) {
+  } catch (e: unknown) {
+    const err = e as { message?: string };
+    if (err && typeof err === "object" && err.message && err.message.includes("static generation store missing")) {
       // Ignore when running outside of Next.js server context (e.g. CLI test scripts)
       return;
     }
@@ -53,7 +54,7 @@ export async function createGoal(formData: FormData) {
   });
 
   const currentTotal = existingGoals.reduce((sum: number, g: { weightage: number }) => sum + g.weightage, 0);
-  
+
   if (existingGoals.length >= 8) {
     throw new Error("Maximum 8 goals allowed per cycle");
   }
@@ -103,19 +104,19 @@ export async function submitGoals(cycleId: string) {
   }
 
   await prisma.goal.updateMany({
-    where: { 
-      employeeId: session.user.id, 
-      cycleId, 
-      status: { in: ["DRAFT", "RETURNED"] } 
+    where: {
+      employeeId: session.user.id,
+      cycleId,
+      status: { in: ["DRAFT", "RETURNED"] }
     },
     data: { status: "SUBMITTED" },
   });
 
-  const employee = await prisma.user.findUnique({ 
-    where: { id: session.user.id }, 
-    include: { manager: true } 
+  const employee = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    include: { manager: true }
   });
-  
+
   if (employee?.manager) {
     await sendEmail({
       to: employee.manager.email,
@@ -661,6 +662,295 @@ export async function triggerCheckInReminders(cycleId: string) {
   }
 
   return { success: true, reminderCount };
+}
+
+export async function runEscalationEngine() {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  // 1. Ensure dynamic escalation rules exist
+  const defaultRules = [
+    { triggerType: "GOAL_SUBMISSION_PENDING", daysLimit: 5 },
+    { triggerType: "MANAGER_APPROVAL_PENDING", daysLimit: 3 },
+    { triggerType: "CHECKIN_PENDING", daysLimit: 7 },
+  ];
+
+  for (const r of defaultRules) {
+    const existing = await prisma.escalationRule.findFirst({
+      where: { triggerType: r.triggerType }
+    });
+    if (!existing) {
+      await prisma.escalationRule.create({
+        data: { triggerType: r.triggerType, daysLimit: r.daysLimit }
+      });
+    }
+  }
+
+  const rules = await prisma.escalationRule.findMany();
+  const submissionRule = rules.find(r => r.triggerType === "GOAL_SUBMISSION_PENDING")!;
+  const approvalRule = rules.find(r => r.triggerType === "MANAGER_APPROVAL_PENDING")!;
+  const checkinRule = rules.find(r => r.triggerType === "CHECKIN_PENDING")!;
+
+  // 2. Fetch the active cycle
+  const activeCycle = await prisma.goalCycle.findFirst({
+    where: { isActive: true }
+  });
+  if (!activeCycle) {
+    return { success: true, processedCount: 0, message: "No active cycle found to evaluate escalations." };
+  }
+
+  const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  let processedCount = 0;
+
+  // Fetch all employees with managers
+  const employees = await prisma.user.findMany({
+    where: { role: "EMPLOYEE" },
+    include: {
+      manager: true,
+      goals: {
+        where: { cycleId: activeCycle.id },
+        include: {
+          checkIns: {
+            where: { quarter: activeCycle.phase }
+          }
+        }
+      }
+    }
+  });
+
+  const today = new Date();
+
+  for (const emp of employees) {
+    try {
+      // -------------------------------------------------------------
+      // RULE 1: GOAL_SUBMISSION_PENDING (Employee has not submitted goals within N days)
+      // -------------------------------------------------------------
+      const hasSubmitted = emp.goals.length > 0 && emp.goals.every(g => g.status !== "DRAFT" && g.status !== "RETURNED");
+      const submissionOpenDays = Math.max(0, Math.floor((today.getTime() - new Date(activeCycle.startDate).getTime()) / (1000 * 60 * 60 * 24)));
+
+      const submissionEscLog = await prisma.escalationLog.findFirst({
+        where: { employeeId: emp.id, ruleId: submissionRule.id, status: { in: ["PENDING", "ESCALATED"] } }
+      });
+
+      if (!hasSubmitted) {
+        let targetLevel = 0;
+        if (submissionOpenDays >= submissionRule.daysLimit * 3) {
+          targetLevel = 3; // HR alert
+        } else if (submissionOpenDays >= submissionRule.daysLimit * 2) {
+          targetLevel = 2; // Manager alert
+        } else if (submissionOpenDays >= submissionRule.daysLimit) {
+          targetLevel = 1; // Employee alert
+        }
+
+        if (targetLevel > 0) {
+          processedCount++;
+          let details = "";
+
+          if (targetLevel === 1) {
+            details = `Level 1: Goal submission pending for ${submissionOpenDays} days. Employee alerted.`;
+            await sendEmail({
+              to: emp.email,
+              subject: `⚠️ Escalation Level 1: AtomQuest Goal Submission Pending`,
+              body: `Hi ${emp.name},\n\nYou have not submitted your AtomQuest goal sheet for the cycle "${activeCycle.name}". Please log in and submit your goals as soon as possible: ${appUrl}/dashboard/goals`
+            }).catch(e => console.error(e));
+          } else if (targetLevel === 2) {
+            details = `Level 2: Goal submission pending for ${submissionOpenDays} days. Manager alerted.`;
+            if (emp.manager) {
+              await sendEmail({
+                to: emp.manager.email,
+                subject: `⚠️ Escalation Level 2: Goal Submission Overdue for ${emp.name}`,
+                body: `Hello Manager,\n\nYour subordinate ${emp.name} has not submitted their goal sheet for "${activeCycle.name}" within ${submissionOpenDays} days. Please discuss and have them complete it: ${appUrl}/dashboard/team/${emp.id}`
+              }).catch(e => console.error(e));
+            }
+          } else {
+            details = `Level 3: Goal submission overdue for ${submissionOpenDays} days. HR / Skip-Level escalated.`;
+            await sendEmail({
+              to: "hr@atomberg.com",
+              subject: `🚨 Escalation Level 3: Goal Submission Overdue for ${emp.name}`,
+              body: `Hello HR,\n\nEmployee ${emp.name} has not submitted their goals for "${activeCycle.name}" after multiple alerts (${submissionOpenDays} days overdue). Skip-level / HR intervention requested.`
+            }).catch(e => console.error(e));
+          }
+
+          if (submissionEscLog) {
+            if (submissionEscLog.level !== targetLevel) {
+              await prisma.escalationLog.update({
+                where: { id: submissionEscLog.id },
+                data: { level: targetLevel, status: targetLevel > 1 ? "ESCALATED" : "PENDING", details }
+              });
+            }
+          } else {
+            await prisma.escalationLog.create({
+              data: { employeeId: emp.id, ruleId: submissionRule.id, level: targetLevel, status: targetLevel > 1 ? "ESCALATED" : "PENDING", details }
+            });
+          }
+        }
+      } else {
+        if (submissionEscLog) {
+          await prisma.escalationLog.update({
+            where: { id: submissionEscLog.id },
+            data: { status: "RESOLVED", resolvedAt: today }
+          });
+        }
+      }
+
+      // -------------------------------------------------------------
+      // RULE 2: MANAGER_APPROVAL_PENDING (Manager hasn't approved goals within N days)
+      // -------------------------------------------------------------
+      const hasSubmittedPendingApproval = emp.goals.length > 0 && emp.goals.some(g => g.status === "SUBMITTED");
+      const lastGoalSubmitDate = emp.goals.length > 0 ? new Date(Math.max(...emp.goals.map(g => new Date(g.updatedAt).getTime()))) : today;
+      const approvalOpenDays = Math.max(0, Math.floor((today.getTime() - lastGoalSubmitDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+      const approvalEscLog = await prisma.escalationLog.findFirst({
+        where: { employeeId: emp.id, ruleId: approvalRule.id, status: { in: ["PENDING", "ESCALATED"] } }
+      });
+
+      if (hasSubmittedPendingApproval) {
+        let targetLevel = 0;
+        if (approvalOpenDays >= approvalRule.daysLimit * 2) {
+          targetLevel = 2; // HR alert
+        } else if (approvalOpenDays >= approvalRule.daysLimit) {
+          targetLevel = 1; // Manager alert
+        }
+
+        if (targetLevel > 0) {
+          processedCount++;
+          let details = "";
+
+          if (targetLevel === 1) {
+            details = `Level 1: Manager approval pending for ${approvalOpenDays} days. Manager alerted.`;
+            if (emp.manager) {
+              await sendEmail({
+                to: emp.manager.email,
+                subject: `⚠️ Escalation Level 1: Subordinate Approval Pending`,
+                body: `Hello Manager,\n\nYou have not approved the goals submitted by ${emp.name} for "${activeCycle.name}" within ${approvalOpenDays} days. Please review and lock their goals: ${appUrl}/dashboard/team/${emp.id}`
+              }).catch(e => console.error(e));
+            }
+          } else {
+            details = `Level 2: Manager approval overdue for ${approvalOpenDays} days. HR / Skip-Level escalated.`;
+            await sendEmail({
+              to: "hr@atomberg.com",
+              subject: `🚨 Escalation Level 2: Manager Goal Approval Overdue for ${emp.name}`,
+              body: `Hello HR,\n\nManager ${emp.manager?.name || "N/A"} has not approved the goal sheet submitted by ${emp.name} after ${approvalOpenDays} days. Intervention is required.`
+            }).catch(e => console.error(e));
+          }
+
+          if (approvalEscLog) {
+            if (approvalEscLog.level !== targetLevel) {
+              await prisma.escalationLog.update({
+                where: { id: approvalEscLog.id },
+                data: { level: targetLevel, status: "ESCALATED", details }
+              });
+            }
+          } else {
+            await prisma.escalationLog.create({
+              data: { employeeId: emp.id, ruleId: approvalRule.id, level: targetLevel, status: targetLevel > 1 ? "ESCALATED" : "PENDING", details }
+            });
+          }
+        }
+      } else {
+        if (approvalEscLog) {
+          await prisma.escalationLog.update({
+            where: { id: approvalEscLog.id },
+            data: { status: "RESOLVED", resolvedAt: today }
+          });
+        }
+      }
+
+      // -------------------------------------------------------------
+      // RULE 3: CHECKIN_PENDING (Quarterly check-in not completed in window)
+      // -------------------------------------------------------------
+      const hasGoalsLocked = emp.goals.length > 0 && emp.goals.every(g => g.status === "LOCKED");
+      const checkinCompleted = emp.goals.length > 0 && emp.goals.every(g => g.checkIns.length > 0);
+      const checkinOpenDays = Math.max(0, Math.floor((today.getTime() - new Date(activeCycle.startDate).getTime()) / (1000 * 60 * 60 * 24)));
+
+      const checkinEscLog = await prisma.escalationLog.findFirst({
+        where: { employeeId: emp.id, ruleId: checkinRule.id, status: { in: ["PENDING", "ESCALATED"] } }
+      });
+
+      if (hasGoalsLocked && !checkinCompleted) {
+        let targetLevel = 0;
+        if (checkinOpenDays >= checkinRule.daysLimit * 3) {
+          targetLevel = 3; // HR alert
+        } else if (checkinOpenDays >= checkinRule.daysLimit * 2) {
+          targetLevel = 2; // Manager alert
+        } else if (checkinOpenDays >= checkinRule.daysLimit) {
+          targetLevel = 1; // Employee alert
+        }
+
+        if (targetLevel > 0) {
+          processedCount++;
+          let details = "";
+
+          if (targetLevel === 1) {
+            details = `Level 1: Quarterly ${activeCycle.phase} check-in pending for ${checkinOpenDays} days. Employee alerted.`;
+            await sendEmail({
+              to: emp.email,
+              subject: `⚠️ Escalation Level 1: Quarterly ${activeCycle.phase} Check-in Overdue`,
+              body: `Hi ${emp.name},\n\nPlease complete your check-ins and achievement capture for ${activeCycle.phase} under "${activeCycle.name}" immediately: ${appUrl}/dashboard/goals`
+            }).catch(e => console.error(e));
+          } else if (targetLevel === 2) {
+            details = `Level 2: Quarterly ${activeCycle.phase} check-in pending for ${checkinOpenDays} days. Manager alerted.`;
+            if (emp.manager) {
+              await sendEmail({
+                to: emp.manager.email,
+                subject: `⚠️ Escalation Level 2: Check-in Overdue for ${emp.name}`,
+                body: `Hello Manager,\n\nYour 1:1 check-in and comments with ${emp.name} for ${activeCycle.phase} are overdue by ${checkinOpenDays} days. Please log them: ${appUrl}/dashboard/checkins`
+              }).catch(e => console.error(e));
+            }
+          } else {
+            details = `Level 3: Quarterly ${activeCycle.phase} check-in overdue for ${checkinOpenDays} days. HR alerted.`;
+            await sendEmail({
+              to: "hr@atomberg.com",
+              subject: `🚨 Escalation Level 3: Quarterly Check-in Overdue for ${emp.name}`,
+              body: `Hello HR,\n\nCheck-in for employee ${emp.name} and manager ${emp.manager?.name || "N/A"} remains incomplete for ${activeCycle.phase} after ${checkinOpenDays} days. Intervention is required.`
+            }).catch(e => console.error(e));
+          }
+
+          if (checkinEscLog) {
+            if (checkinEscLog.level !== targetLevel) {
+              await prisma.escalationLog.update({
+                where: { id: checkinEscLog.id },
+                data: { level: targetLevel, status: targetLevel > 1 ? "ESCALATED" : "PENDING", details }
+              });
+            }
+          } else {
+            await prisma.escalationLog.create({
+              data: { employeeId: emp.id, ruleId: checkinRule.id, level: targetLevel, status: targetLevel > 1 ? "ESCALATED" : "PENDING", details }
+            });
+          }
+        }
+      } else {
+        if (checkinEscLog) {
+          await prisma.escalationLog.update({
+            where: { id: checkinEscLog.id },
+            data: { status: "RESOLVED", resolvedAt: today }
+          });
+        }
+      }
+    } catch (err) {
+      console.error(`[Escalation Engine Warning] Failed to process escalations for employee ${emp.name} (${emp.id}):`, err);
+    }
+  }
+
+  revalidatePath("/dashboard/admin");
+  return { success: true, processedCount, message: `Successfully evaluated escalation engine rules. Processed ${processedCount} active escalations.` };
+}
+
+export async function updateEscalationRuleDays(triggerType: string, daysLimit: number) {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  await prisma.escalationRule.updateMany({
+    where: { triggerType },
+    data: { daysLimit }
+  });
+
+  revalidatePath("/dashboard/admin");
+  return { success: true, message: `Successfully updated escalation threshold to ${daysLimit} days.` };
 }
 
 

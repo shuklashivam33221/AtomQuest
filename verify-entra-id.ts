@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, @typescript-eslint/no-require-imports */
 import { prisma } from "./src/lib/prisma";
 import NextAuth from "next-auth";
 import { handlers } from "./src/lib/auth";

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { prisma } from "./src/lib/prisma";
 import { GET as exportGET } from "./src/app/api/admin/export/route";
 import { 

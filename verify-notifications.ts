@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { prisma } from "./src/lib/prisma";
 import { sendEmail } from "./src/lib/email";
 import { sendTeamsNotification } from "./src/lib/teams";
@@ -24,7 +25,7 @@ async function main() {
   });
 
   const hashedPwd = await bcrypt.hash("verify123", 10);
-  
+
   const adminUser = await prisma.user.upsert({
     where: { email: "notify.adm@atomberg.com" },
     update: {},
@@ -175,7 +176,7 @@ async function main() {
   // CLEANUP AND SUMMARY REPORT
   // ==========================================
   console.log(bold("\n--- Cleanup Testing Artifacts ---"));
-  
+
   (process.env as any).BYPASS_SCHEDULE_LOCK = "true";
   (process.env as any).NODE_ENV = "test";
 
@@ -188,11 +189,11 @@ async function main() {
   await prisma.department.delete({ where: { id: testDept.id } });
 
   delete (process.env as any).MOCK_SESSION;
-  
+
   console.log(green("✔ Successfully cleaned up all temporary test accounts and data. Database left in a pristine state."));
 
   console.log(bold(cyan("\n========================================================")));
-  console.log(bold(cyan(` VERIFICATION SUMMARY: ${passedTests}/${totalTests} TESTS PASSED (${Math.round((passedTests/totalTests)*100)}%) `)));
+  console.log(bold(cyan(` VERIFICATION SUMMARY: ${passedTests}/${totalTests} TESTS PASSED (${Math.round((passedTests / totalTests) * 100)}%) `)));
   console.log(bold(cyan("========================================================\n")));
 }
 

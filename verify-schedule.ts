@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { prisma } from "./src/lib/prisma";
-import { 
+import {
   createGoal,
   updateAchievement
 } from "./src/lib/actions";
@@ -75,7 +76,7 @@ async function main() {
   console.log(bold("\n--- Section 2: Active Database Cycle Override Rule ---"));
 
   console.log(yellow("Provisioning sandboxed department and goal cycle..."));
-  
+
   // Clean up stale test data and deactivate other active cycles to prevent search non-determinism
   const staleUsers = await prisma.user.findMany({
     where: { email: { in: ["schedule.emp@atomberg.com", "schedule.mgr@atomberg.com"] } },
@@ -167,7 +168,7 @@ async function main() {
     fd.append("uom", "NUMERIC_MIN");
     fd.append("weightage", "20");
     fd.append("cycleId", testCycle.id);
-    
+
     await createGoal(fd);
   } catch (err: any) {
     createGoalBlocked = err.message.includes("Goal creation is only allowed during the Goal Setting phase");
@@ -229,19 +230,19 @@ async function main() {
   // CLEANUP AND SUMMARY REPORT
   // ==========================================
   console.log(bold("\n--- Cleanup Testing Artifacts ---"));
-  
+
   (process.env as any).NODE_ENV = "test";
   await prisma.achievement.deleteMany({ where: { goalId: testGoal.id } });
   await prisma.goal.deleteMany({ where: { cycleId: testCycle.id } });
   await prisma.goalCycle.delete({ where: { id: testCycle.id } });
   await prisma.user.deleteMany({ where: { id: { in: [manager.id, employee.id] } } });
   await prisma.department.delete({ where: { id: testDept.id } });
-  
+
   clearSession();
   console.log(green("✔ Successfully cleaned up all temporary test accounts and data. Database left in a pristine state."));
 
   console.log(bold(cyan("\n========================================================")));
-  console.log(bold(cyan(` VERIFICATION SUMMARY: ${passedTests}/${totalTests} TESTS PASSED (${Math.round((passedTests/totalTests)*100)}%) `)));
+  console.log(bold(cyan(` VERIFICATION SUMMARY: ${passedTests}/${totalTests} TESTS PASSED (${Math.round((passedTests / totalTests) * 100)}%) `)));
   console.log(bold(cyan("========================================================\n")));
 }
 
