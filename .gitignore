@@ -42,3 +42,12 @@ next-env.d.ts
 
 /src/generated/prisma
 everything.md
+
+# Scratch & Database verification scripts (Local development only)
+check-db.ts
+raw-test.ts
+verify-*.ts
+
+# Local documents & manuals
+*.md
+!README.md
