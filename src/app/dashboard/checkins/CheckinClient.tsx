@@ -103,10 +103,10 @@ export default function CheckinClient({
                 <div className={styles.mainSubtitle}>{activeMember.role}</div>
               </div>
             </div>
-            <div className={styles.headerActions}>
+            <div className={styles.headerActions} style={{ alignItems: "center" }}>
               <select 
                 className="input" 
-                style={{ padding: "0.25rem 0.5rem", marginRight: "1rem" }}
+                style={{ padding: "0.5rem 1rem", marginRight: "1rem", borderRadius: "var(--radius-md)" }}
                 value={activeQuarter}
                 onChange={(e) => setActiveQuarter(e.target.value)}
               >
@@ -120,7 +120,7 @@ export default function CheckinClient({
                 target="_blank" 
                 rel="noreferrer" 
                 className="btn btn-secondary" 
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", whiteSpace: "nowrap", padding: "0.625rem 1.25rem", height: "fit-content" }}
               >
                 <Video size={16} /> Join Call
               </a>
