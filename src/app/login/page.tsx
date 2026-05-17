@@ -59,6 +59,11 @@ export default function LoginPage() {
     }
   };
 
+  const handleMicrosoftLogin = () => {
+    setLoading(true);
+    signIn("microsoft-entra-id", { callbackUrl: "/dashboard" });
+  };
+
   const handleDemoLogin = (cred: typeof DEMO_CREDENTIALS[0]) => {
     setEmail(cred.email);
     setPassword(cred.password);
@@ -123,9 +128,42 @@ export default function LoginPage() {
           </button>
         </form>
 
-          <p style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-            Don&apos;t have an account? <Link href="/signup" style={{ color: "var(--primary-dark)", fontWeight: 600, textDecoration: "none" }}>Sign up</Link>
-          </p>
+        <div style={{ display: "flex", alignItems: "center", margin: "1.25rem 0", gap: "10px" }}>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.08)" }}></div>
+          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 500 }}>OR</span>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(0, 0, 0, 0.08)" }}></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleMicrosoftLogin}
+          className={styles.submitBtn}
+          style={{
+            backgroundColor: "#fff",
+            color: "#333",
+            border: "1px solid rgba(0, 0, 0, 0.12)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.2s ease"
+          }}
+          disabled={loading}
+        >
+          <svg width="18" height="18" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 0H11V11H0V0Z" fill="#F25022"/>
+            <path d="M12 0H23V11H12V0Z" fill="#7FBA00"/>
+            <path d="M0 12H11V23H0V12Z" fill="#00A4EF"/>
+            <path d="M12 12H23V23H12V12Z" fill="#FFB900"/>
+          </svg>
+          {loading ? "Connecting..." : "Sign in with Microsoft"}
+        </button>
+
+        <p style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+          Don&apos;t have an account? <Link href="/signup" style={{ color: "var(--primary-dark)", fontWeight: 600, textDecoration: "none" }}>Sign up</Link>
+        </p>
 
         <div className={styles.demoSection}>
           <p className={styles.demoTitle}>Quick Access — Demo Accounts</p>

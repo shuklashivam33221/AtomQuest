@@ -5,9 +5,31 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 import { authConfig } from "./auth.config";
 
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
+
 const { handlers, auth: nextAuth, signIn, signOut: nextSignOut } = NextAuth({
   ...authConfig,
   providers: [
+    MicrosoftEntraID({
+      clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID || "mock-entra-id-client-id",
+      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET || "mock-entra-id-client-secret",
+      issuer: `https://login.microsoftonline.com/${process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID || "common"}/v2.0`,
+      profile(profile) {
+        let role = "EMPLOYEE";
+        const groups = (profile as any).groups || [];
+        if (groups.includes(process.env.AZURE_AD_ADMIN_GROUP_ID || "") || profile.email?.includes(".adm@") || profile.email?.includes("admin@")) {
+          role = "ADMIN";
+        } else if (groups.includes(process.env.AZURE_AD_MANAGER_GROUP_ID || "") || profile.email?.includes(".mgr@") || profile.email?.includes("manager@")) {
+          role = "MANAGER";
+        }
+        return {
+          id: profile.sub,
+          name: profile.name ?? profile.preferred_username,
+          email: profile.email,
+          role,
+        };
+      }
+    }),
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
@@ -34,6 +56,43 @@ const { handlers, auth: nextAuth, signIn, signOut: nextSignOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account }) {
+      if (account?.provider === "microsoft-entra-id") {
+        if (!user.email) return false;
+
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+
+        if (!existingUser) {
+          const defaultManager = await prisma.user.findFirst({
+            where: { role: "MANAGER" },
+          });
+
+          await prisma.user.create({
+            data: {
+              name: user.name || "Azure User",
+              email: user.email,
+              password: "",
+              role: (user as any).role || "EMPLOYEE",
+              managerId: defaultManager?.id || null,
+            },
+          });
+        } else {
+          await prisma.user.update({
+            where: { email: user.email },
+            data: {
+              name: user.name || existingUser.name,
+              role: (user as any).role || existingUser.role,
+            },
+          });
+        }
+      }
+      return true;
+    }
+  }
 });
 
 export { handlers, signIn };
