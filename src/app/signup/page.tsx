@@ -61,10 +61,10 @@ export default function SignupPage() {
       });
 
       if (result?.error) {
-         setError("Account created, but auto-login failed. Please go to Login.");
+        setError("Account created, but auto-login failed. Please sign in manually.");
       } else {
-         router.push("/dashboard");
-         router.refresh();
+        router.push("/");
+        router.refresh();
       }
 
     } catch (err) {

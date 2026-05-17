@@ -50,7 +50,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
       } else {
-        router.push("/dashboard");
+        router.push("/");
         router.refresh();
       }
     } catch {
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
   const handleMicrosoftLogin = () => {
     setLoading(true);
-    signIn("microsoft-entra-id", { callbackUrl: "/dashboard" });
+    signIn("microsoft-entra-id", { callbackUrl: "/" });
   };
 
   const handleDemoLogin = (cred: typeof DEMO_CREDENTIALS[0]) => {

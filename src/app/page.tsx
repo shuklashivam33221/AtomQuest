@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import Link from "next/link";
 import { Target } from "lucide-react";
 import styles from "./home.module.css";
@@ -32,10 +32,16 @@ export default async function Home() {
 
         <div className={styles.navAuth}>
           {session?.user ? (
-            <>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
               <span className={styles.userName}>Hello, {session.user.name}</span>
               <Link href="/dashboard" className={styles.signupBtn}>Go to Dashboard</Link>
-            </>
+              <form action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}>
+                <button type="submit" style={{ cursor: "pointer", border: "none", background: "none", padding: 0, color: "var(--text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Log Out</button>
+              </form>
+            </div>
           ) : (
             <>
               <Link href="/login" className={styles.loginBtn}>Sign In</Link>

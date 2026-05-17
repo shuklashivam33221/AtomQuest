@@ -61,12 +61,12 @@ export default function Sidebar({ userName, userRole }: SidebarProps) {
     <aside className={styles.sidebar}>
       {/* Logo */}
       <div className={styles.logoArea}>
-        <div className={styles.logoFlex}>
+        <Link href="/" className={styles.logoFlex} style={{ textDecoration: 'none' }}>
           <div className={styles.logoIcon}>
             <Target strokeWidth={2.5} />
           </div>
           <span className={styles.logoText}>AtomQuest</span>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}
