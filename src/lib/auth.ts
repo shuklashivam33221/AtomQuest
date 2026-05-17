@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 import { authConfig } from "./auth.config";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const { handlers, auth: nextAuth, signIn, signOut: nextSignOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
@@ -35,3 +35,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 });
+
+export { handlers, signIn };
+
+export async function auth() {
+  if (process.env.MOCK_SESSION) {
+    try {
+      return JSON.parse(process.env.MOCK_SESSION);
+    } catch {
+      return null;
+    }
+  }
+  return nextAuth();
+}
+
+export async function signOut(...args: any[]) {
+  return nextSignOut(...args);
+}

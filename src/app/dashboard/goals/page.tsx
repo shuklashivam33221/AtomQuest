@@ -48,6 +48,20 @@ export default async function GoalsPage() {
     orderBy: { createdAt: "asc" },
   });
 
+  const checkins = await prisma.checkIn.findMany({
+    where: {
+      goal: {
+        employeeId: userId,
+        cycleId: activeCycle.id,
+      },
+    },
+    select: {
+      quarter: true,
+    },
+  });
+
+  const lockedQuarters = checkins.map(c => c.quarter as string);
+
   const isLocked = existingGoals.length > 0 && existingGoals.every(g => g.status === "LOCKED");
 
   return (
@@ -68,7 +82,7 @@ export default async function GoalsPage() {
       
       {userRole === "EMPLOYEE" ? (
         isLocked ? (
-          <AchievementTracker goals={existingGoals} />
+          <AchievementTracker goals={existingGoals} lockedQuarters={lockedQuarters} />
         ) : (
           <GoalForm cycleId={activeCycle.id} existingGoals={existingGoals} />
         )

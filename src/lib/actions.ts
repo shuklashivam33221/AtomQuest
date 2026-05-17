@@ -3,7 +3,19 @@
 import { GoalPhase, UoMType, ProgressStatus, GoalStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath as nextRevalidatePath } from "next/cache";
+
+function revalidatePath(path: string) {
+  try {
+    nextRevalidatePath(path);
+  } catch (e: any) {
+    if (e && typeof e === "object" && "message" in e && e.message.includes("static generation store missing")) {
+      // Ignore when running outside of Next.js server context (e.g. CLI test scripts)
+      return;
+    }
+    throw e;
+  }
+}
 import { sendEmail } from "@/lib/email";
 
 export async function createGoal(formData: FormData) {
@@ -64,7 +76,7 @@ export async function submitGoals(cycleId: string) {
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const goals = await prisma.goal.findMany({
-    where: { employeeId: session.user.id, cycleId, status: "DRAFT" },
+    where: { employeeId: session.user.id, cycleId },
   });
 
   const totalWeight = goals.reduce((sum: number, g: { weightage: number }) => sum + g.weightage, 0);
@@ -73,7 +85,11 @@ export async function submitGoals(cycleId: string) {
   }
 
   await prisma.goal.updateMany({
-    where: { employeeId: session.user.id, cycleId, status: "DRAFT" },
+    where: { 
+      employeeId: session.user.id, 
+      cycleId, 
+      status: { in: ["DRAFT", "RETURNED"] } 
+    },
     data: { status: "SUBMITTED" },
   });
 
@@ -251,29 +267,68 @@ export async function updateAchievement(
     throw new Error("Unauthorized to update this goal");
   }
 
-  const existing = await prisma.achievement.findFirst({
-    where: { goalId, quarter: quarter as GoalPhase },
-  });
+  // If the goal is shared, find all linked goals in the same cycle and update them all
+  if (goal.isShared) {
+    const linkedGoals = await prisma.goal.findMany({
+      where: {
+        title: goal.title,
+        cycleId: goal.cycleId,
+        isShared: true,
+      },
+    });
 
-  if (existing) {
-    await prisma.achievement.update({
-      where: { id: existing.id },
-      data: {
-        actualValue,
-        progressStatus: progressStatus as ProgressStatus,
-        completionDate: progressStatus === "COMPLETED" ? new Date() : null,
-      },
-    });
+    for (const lg of linkedGoals) {
+      const existing = await prisma.achievement.findFirst({
+        where: { goalId: lg.id, quarter: quarter as GoalPhase },
+      });
+
+      if (existing) {
+        await prisma.achievement.update({
+          where: { id: existing.id },
+          data: {
+            actualValue,
+            progressStatus: progressStatus as ProgressStatus,
+            completionDate: progressStatus === "COMPLETED" ? new Date() : null,
+          },
+        });
+      } else {
+        await prisma.achievement.create({
+          data: {
+            goalId: lg.id,
+            quarter: quarter as GoalPhase,
+            actualValue,
+            progressStatus: progressStatus as ProgressStatus,
+            completionDate: progressStatus === "COMPLETED" ? new Date() : null,
+          },
+        });
+      }
+    }
   } else {
-    await prisma.achievement.create({
-      data: {
-        goalId,
-        quarter: quarter as GoalPhase,
-        actualValue,
-        progressStatus: progressStatus as ProgressStatus,
-        completionDate: progressStatus === "COMPLETED" ? new Date() : null,
-      },
+    // Standard single-goal update
+    const existing = await prisma.achievement.findFirst({
+      where: { goalId, quarter: quarter as GoalPhase },
     });
+
+    if (existing) {
+      await prisma.achievement.update({
+        where: { id: existing.id },
+        data: {
+          actualValue,
+          progressStatus: progressStatus as ProgressStatus,
+          completionDate: progressStatus === "COMPLETED" ? new Date() : null,
+        },
+      });
+    } else {
+      await prisma.achievement.create({
+        data: {
+          goalId,
+          quarter: quarter as GoalPhase,
+          actualValue,
+          progressStatus: progressStatus as ProgressStatus,
+          completionDate: progressStatus === "COMPLETED" ? new Date() : null,
+        },
+      });
+    }
   }
 
   revalidatePath("/dashboard/goals");

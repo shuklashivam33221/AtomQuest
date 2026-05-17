@@ -18,12 +18,21 @@ type Goal = {
   achievements: { quarter: GoalPhase; actualValue: number | null; progressStatus: ProgressStatus }[];
 };
 
-export default function AchievementTracker({ goals }: { goals: Goal[] }) {
+export default function AchievementTracker({ 
+  goals,
+  lockedQuarters = []
+}: { 
+  goals: Goal[];
+  lockedQuarters?: string[];
+}) {
   const [activeQuarter, setActiveQuarter] = useState("Q1");
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
 
+  const isQuarterLocked = lockedQuarters.includes(activeQuarter);
+
   const handleSave = (goalId: string, formData: FormData) => {
+    if (isQuarterLocked) return;
     setMessage("");
     const actualValue = parseFloat(formData.get("actualValue") as string) || 0;
     const status = formData.get("progressStatus") as string;
@@ -57,9 +66,15 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
         </select>
       </div>
       
-      <div style={{ padding: "0.75rem", backgroundColor: "var(--info-bg, #e0f2fe)", border: "1px solid var(--info-border, #bae6fd)", borderRadius: "var(--radius-md)", marginBottom: "1rem", fontSize: "0.8125rem", color: "var(--info-text, #0369a1)" }}>
-        <strong>💡 Hackathon Note:</strong> All quarterly check-in windows (Q1-Q4) are manually accessible for end-to-end testing. In production, these windows are system-locked to their respective months (July, Oct, Jan, March) as per the BRD.
-      </div>
+      {isQuarterLocked ? (
+        <div style={{ padding: "0.75rem", backgroundColor: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "var(--radius-md)", marginBottom: "1rem", fontSize: "0.8125rem", color: "#991b1b" }}>
+          🔒 <strong>Check-in Completed:</strong> The {activeQuarter} check-in discussion has been completed and locked by your manager. Achievements for this quarter can no longer be modified.
+        </div>
+      ) : (
+        <div style={{ padding: "0.75rem", backgroundColor: "var(--info-bg, #e0f2fe)", border: "1px solid var(--info-border, #bae6fd)", borderRadius: "var(--radius-md)", marginBottom: "1rem", fontSize: "0.8125rem", color: "var(--info-text, #0369a1)" }}>
+          <strong>💡 Hackathon Note:</strong> All quarterly check-in windows (Q1-Q4) are manually accessible for end-to-end testing. In production, these windows are system-locked to their respective months (July, Oct, Jan, March) as per the BRD.
+        </div>
+      )}
 
       {message && <div style={{ color: "var(--success)", fontSize: "0.875rem", marginBottom: "1rem" }}>{message}</div>}
 
@@ -98,7 +113,7 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           defaultValue={achievement?.actualValue || ""}
                           placeholder="e.g. 95"
                           required={goal.target !== null && goal.uom !== "TIMELINE"}
-                          disabled={goal.isShared || isPending}
+                          disabled={goal.isShared || isPending || isQuarterLocked}
                         />
                       </div>
                       <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem" }}>
@@ -117,17 +132,23 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           name="progressStatus" 
                           className={tableStyles.input}
                           defaultValue={achievement?.progressStatus || "NOT_STARTED"}
-                          disabled={goal.isShared || isPending}
+                          disabled={goal.isShared || isPending || isQuarterLocked}
                         >
                           <option value="NOT_STARTED">Not Started</option>
                           <option value="ON_TRACK">On Track</option>
                           <option value="COMPLETED">Completed</option>
                         </select>
                       </div>
-                      <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                        <button type="submit" className="btn btn-secondary" disabled={isPending || goal.isShared} style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem" }}>
-                          <Save size={14} /> {isPending ? "Saving..." : "Save"}
-                        </button>
+                      <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.25rem", alignItems: "center" }}>
+                        {isQuarterLocked ? (
+                          <span style={{ fontSize: "0.8125rem", color: "#b91c1c", backgroundColor: "#fef2f2", padding: "0.375rem 0.75rem", borderRadius: "0.375rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: "0.25rem", border: "1px solid #fca5a5" }}>
+                            🔒 Locked
+                          </span>
+                        ) : (
+                          <button type="submit" className="btn btn-secondary" disabled={isPending || goal.isShared} style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem" }}>
+                            <Save size={14} /> {isPending ? "Saving..." : "Save"}
+                          </button>
+                        )}
                         {goal.isShared && (
                           <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textAlign: "center" }}>
                             Auto-syncs from Owner
