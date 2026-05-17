@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "AtomQuest | Goal Setting & Tracking Portal",
   description: "In-House Goal Setting & Tracking Portal for Atomberg",
   icons: {
-    icon: "/icon.svg",
+    icon: "/icon.svg?v=1",
   },
 };
 
