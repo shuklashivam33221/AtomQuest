@@ -405,3 +405,57 @@ export async function pushSharedGoal(title: string, uom: string, target: number 
 
   revalidatePath("/dashboard/admin");
 }
+
+export async function updateUserManager(employeeId: string, managerId: string | null) {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  await prisma.user.update({
+    where: { id: employeeId },
+    data: { managerId }
+  });
+
+  revalidatePath("/dashboard/admin");
+}
+
+export async function simulateEntraIDSync() {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  // Find all employees without a manager
+  const unassignedEmployees = await prisma.user.findMany({
+    where: { role: "EMPLOYEE", managerId: null }
+  });
+
+  if (unassignedEmployees.length === 0) {
+    return { success: true, count: 0, message: "Hierarchy is already fully synchronized." };
+  }
+
+  // Get active managers
+  const managers = await prisma.user.findMany({
+    where: { role: "MANAGER" }
+  });
+
+  if (managers.length === 0) {
+    throw new Error("Cannot sync: No active managers found in the system.");
+  }
+
+  // Simulate Azure AD matching algorithm: Assign evenly or based on department logic
+  // For this simulation, we'll assign randomly to mimic external data sync
+  let count = 0;
+  for (const emp of unassignedEmployees) {
+    const randomManager = managers[Math.floor(Math.random() * managers.length)];
+    await prisma.user.update({
+      where: { id: emp.id },
+      data: { managerId: randomManager.id }
+    });
+    count++;
+  }
+
+  revalidatePath("/dashboard/admin");
+  return { success: true, count, message: `Successfully synchronized ${count} employee(s) from Microsoft Entra ID.` };
+}

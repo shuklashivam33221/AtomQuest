@@ -11,6 +11,7 @@ const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["EMPLOYEE", "MANAGER", "ADMIN"]).default("EMPLOYEE"),
+  managerId: z.string().optional().nullable(),
 });
 
 export async function signUpUser(formData: FormData): Promise<{ success?: boolean; error?: string }> {
@@ -22,7 +23,7 @@ export async function signUpUser(formData: FormData): Promise<{ success?: boolea
       return { error: parsed.error.issues[0].message };
     }
 
-    const { name, email, password, role } = parsed.data;
+    const { name, email, password, role, managerId } = parsed.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -50,6 +51,7 @@ export async function signUpUser(formData: FormData): Promise<{ success?: boolea
         password: hashedPassword,
         role,
         departmentId: defaultDept.id,
+        managerId: role === "EMPLOYEE" ? (managerId || null) : null,
       }
     });
 
@@ -57,6 +59,19 @@ export async function signUpUser(formData: FormData): Promise<{ success?: boolea
   } catch (err) {
     const error = err as Error;
     return { error: error.message || "Failed to create account." };
+  }
+}
+
+export async function getManagers() {
+  try {
+    const managers = await prisma.user.findMany({
+      where: { role: "MANAGER" },
+      select: { id: true, name: true }
+    });
+    return { success: true, managers };
+  } catch (err) {
+    const error = err as Error;
+    return { success: false, error: error.message };
   }
 }
 

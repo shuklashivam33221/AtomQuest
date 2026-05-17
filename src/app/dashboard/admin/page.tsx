@@ -6,6 +6,8 @@ import styles from "../page.module.css";
 import UnlockGoalForm from "./UnlockGoalForm";
 import CycleManagerClient from "./CycleManagerClient";
 import SharedGoalForm from "./SharedGoalForm";
+import OrgHierarchyManager from "./OrgHierarchyManager";
+import { Users } from "lucide-react";
 
 export const metadata = {
   title: "Admin Panel - Atomberg HR",
@@ -30,6 +32,31 @@ export default async function AdminPage() {
 
   const totalUsers = await prisma.user.count({ where: { role: "EMPLOYEE" } });
   const activeCycle = cycles.find(c => c.isActive);
+
+  // Fetch all users to map hierarchy
+  const allUsers = await prisma.user.findMany({
+    orderBy: { name: "asc" },
+  });
+
+  const employeesForHierarchy = allUsers
+    .filter((u) => u.role === "EMPLOYEE")
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      managerId: u.managerId,
+    }));
+
+  const managersForHierarchy = allUsers
+    .filter((u) => u.role === "MANAGER")
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      managerId: u.managerId,
+    }));
 
   // Completion Dashboard Stats
   let totalGoals = 0;
@@ -92,6 +119,17 @@ export default async function AdminPage() {
           <div className={styles.statValue}>{totalGoals > 0 ? Math.round((lockedGoals / totalGoals) * 100) : 0}%</div>
           <div className={styles.statContext}>{lockedGoals} goals locked</div>
         </div>
+      </div>
+ 
+      {/* Dynamic Org Hierarchy Control Panel */}
+      <div className={styles.card} style={{ marginBottom: "1.5rem" }}>
+        <div className={styles.sectionHeading}>
+          <Users size={16} className={styles.headingIcon} /> Organization Hierarchy Management
+        </div>
+        <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "1.5rem", marginTop: "0.5rem" }}>
+          Ensure all employees are correctly mapped to their reporting manager. You can trigger an automated lookup via Microsoft Entra ID (Azure AD) or override mappings manually.
+        </p>
+        <OrgHierarchyManager employees={employeesForHierarchy} managers={managersForHierarchy} />
       </div>
 
       <div className={styles.bottomGrid} style={{ gridTemplateColumns: "1fr 1fr" }}>

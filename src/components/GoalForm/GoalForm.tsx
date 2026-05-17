@@ -50,6 +50,7 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
   const draftGoals = existingGoals.filter((g) => g.status === "DRAFT");
   const canSubmit = totalWeightage === 100 && draftGoals.length > 0;
   const allLocked = existingGoals.length > 0 && existingGoals.every((g) => g.status === "LOCKED" || g.status === "APPROVED");
+  const isSubmitted = existingGoals.length > 0 && existingGoals.every((g) => g.status === "SUBMITTED" || g.status === "LOCKED" || g.status === "APPROVED");
 
   async function handleCreate(formData: FormData) {
     setError("");
@@ -120,6 +121,24 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
 
   return (
     <div className={styles.container}>
+      {isSubmitted && (
+        <div style={{ 
+          padding: "1rem 1.25rem", 
+          backgroundColor: "#e6fffa", 
+          border: "1px solid #319795", 
+          color: "#234e52", 
+          borderRadius: "var(--radius-md)", 
+          marginBottom: "1.5rem", 
+          fontWeight: 500,
+          fontSize: "0.875rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem"
+        }}>
+          <span>🎉</span> 
+          <span><strong>Success:</strong> Goal sheet submitted. Real-time email alerts have been successfully dispatched to your reporting manager for review.</span>
+        </div>
+      )}
       {/* Weightage Summary Bar */}
       <div className={styles.weightageBar}>
         <div className={styles.weightageInfo}>

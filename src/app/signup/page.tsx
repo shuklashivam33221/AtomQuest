@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Target, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import styles from "./signup.module.css";
-import { signUpUser } from "@/lib/auth-actions";
+import { signUpUser, getManagers } from "@/lib/auth-actions";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useEffect } from "react";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,6 +19,21 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("EMPLOYEE");
+  const [managers, setManagers] = useState<Array<{ id: string; name: string }>>([]);
+  const [managerId, setManagerId] = useState("");
+
+  useEffect(() => {
+    async function loadManagers() {
+      const res = await getManagers();
+      if (res.success && res.managers) {
+        setManagers(res.managers);
+        if (res.managers.length > 0) {
+          setManagerId(res.managers[0].id);
+        }
+      }
+    }
+    loadManagers();
+  }, []);
 
   const validateForm = () => {
     if (!name.trim()) return "Full name is required.";
@@ -44,6 +60,9 @@ export default function SignupPage() {
       formData.append("email", email);
       formData.append("password", password);
       formData.append("role", role);
+      if (role === "EMPLOYEE") {
+        formData.append("managerId", managerId);
+      }
 
       // Create user
       const signUpRes = await signUpUser(formData);
@@ -151,6 +170,22 @@ export default function SignupPage() {
                 <option value="ADMIN">Admin</option>
               </select>
             </div>
+ 
+            {role === "EMPLOYEE" && managers.length > 0 && (
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Reporting Manager *</label>
+                <select 
+                  value={managerId}
+                  onChange={(e) => setManagerId(e.target.value)}
+                  className={styles.select}
+                  disabled={loading}
+                >
+                  {managers.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <button type="submit" className={styles.submitBtn} disabled={loading}>
               {loading ? "Creating Account..." : "Sign Up"}

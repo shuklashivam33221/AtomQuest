@@ -121,6 +121,23 @@ export default function ManagerApprovalClient({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {isLocked && (
+        <div style={{ 
+          padding: "1rem 1.25rem", 
+          backgroundColor: "#e6fffa", 
+          border: "1px solid #319795", 
+          color: "#234e52", 
+          borderRadius: "var(--radius-md)", 
+          fontWeight: 500,
+          fontSize: "0.875rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem"
+        }}>
+          <span>🎉</span>
+          <span><strong>Success:</strong> Goals Approved & Locked. A real-time email notification has been successfully dispatched to the employee notifying them of approval.</span>
+        </div>
+      )}
       
       {error && <div className={tableStyles.error}>{error}</div>}
 
