@@ -16,6 +16,7 @@ const NAV_BY_ROLE: Record<string, Array<{ label: string; href: string }>> = {
   EMPLOYEE: [
     { label: "Dashboard", href: "/dashboard" },
     { label: "My Goals", href: "/dashboard/goals" },
+    { label: "Company OKRs", href: "/dashboard/company-okrs" },
   ],
   MANAGER: [
     { label: "Dashboard", href: "/dashboard" },
@@ -23,6 +24,7 @@ const NAV_BY_ROLE: Record<string, Array<{ label: string; href: string }>> = {
     { label: "My Team", href: "/dashboard/team" },
     { label: "Check-ins", href: "/dashboard/checkins" },
     { label: "Analytics", href: "/dashboard/analytics" },
+    { label: "Company OKRs", href: "/dashboard/company-okrs" },
   ],
   ADMIN: [
     { label: "Dashboard", href: "/dashboard" },
@@ -30,6 +32,7 @@ const NAV_BY_ROLE: Record<string, Array<{ label: string; href: string }>> = {
     { label: "My Team", href: "/dashboard/team" },
     { label: "Check-ins", href: "/dashboard/checkins" },
     { label: "Analytics", href: "/dashboard/analytics" },
+    { label: "Company OKRs", href: "/dashboard/company-okrs" },
     { label: "Admin", href: "/dashboard/admin" },
   ],
 };

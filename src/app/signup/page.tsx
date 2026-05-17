@@ -159,7 +159,7 @@ export default function SignupPage() {
           </form>
           
           <p className={styles.termsText}>
-            By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            By signing up, you agree to our <a href="#">Terms of Service</a> and <Link href="/privacy">Privacy Policy</Link>.
           </p>
         </div>
       </div>

@@ -26,8 +26,8 @@ export default async function Home() {
 
         <div className={styles.navLinks}>
           <Link href="#features" className={styles.navLink}>Features</Link>
-          <Link href="#objectives" className={styles.navLink}>Company OKRs</Link>
-          <Link href="#help" className={styles.navLink}>Support</Link>
+          <Link href="/company-okrs" className={styles.navLink}>Company OKRs</Link>
+          <Link href="/support" className={styles.navLink}>Support</Link>
         </div>
 
         <div className={styles.navAuth}>
