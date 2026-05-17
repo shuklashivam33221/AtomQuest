@@ -4,12 +4,17 @@ import { useState, useTransition } from "react";
 import { Plus, Video, Target, Save } from "lucide-react";
 import styles from "./Checkins.module.css";
 import { saveCheckIn } from "@/lib/actions";
+import { computeProgressScore, formatScore } from "@/lib/scoring";
+import { UoMType } from "@prisma/client";
 
 type Goal = {
   id: string;
   title: string;
+  thrustArea: string;
+  uom: string;
+  weightage: number;
   target: number | null;
-  achievements: { quarter: string; actualValue: number | null }[];
+  achievements: { quarter: string; actualValue: number | null; progressStatus: string }[];
 };
 
 type TeamMember = {
@@ -138,14 +143,48 @@ export default function CheckinClient({
                   {activeGoals.map(goal => {
                     const achievement = goal.achievements.find(a => a.quarter === activeQuarter);
                     return (
-                      <div key={goal.id} style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-md)", padding: "1rem", backgroundColor: "var(--surface)" }}>
-                        <div style={{ fontWeight: 500, marginBottom: "0.5rem" }}>{goal.title}</div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.875rem" }}>
+                      <div key={goal.id} style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-md)", padding: "1.25rem", backgroundColor: "var(--surface)", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem", gap: "1rem" }}>
                           <div>
-                            <span style={{ color: "var(--text-secondary)" }}>Target:</span> <strong>{goal.target ?? "—"}</strong>
+                            <span style={{ fontSize: "0.6875rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", display: "block" }}>{goal.thrustArea}</span>
+                            <span style={{ fontWeight: 600, fontSize: "0.9375rem", color: "#1A1A1A", display: "block", marginTop: "0.125rem" }}>{goal.title}</span>
                           </div>
-                          <div>
-                            <span style={{ color: "var(--text-secondary)" }}>{activeQuarter} Actual:</span> <strong>{achievement?.actualValue ?? "Not Reported"}</strong>
+                          {achievement && (
+                            <span style={{
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              padding: "0.25rem 0.5rem",
+                              borderRadius: "4px",
+                              backgroundColor: achievement.progressStatus === "COMPLETED" ? "#ecfdf5" : achievement.progressStatus === "ON_TRACK" ? "#fffbeb" : "#f3f4f6",
+                              color: achievement.progressStatus === "COMPLETED" ? "#047857" : achievement.progressStatus === "ON_TRACK" ? "#b45309" : "#4b5563",
+                              border: achievement.progressStatus === "COMPLETED" ? "1px solid #a7f3d0" : achievement.progressStatus === "ON_TRACK" ? "1px solid #fde68a" : "1px solid #e5e7eb",
+                              whiteSpace: "nowrap"
+                            }}>
+                              {achievement.progressStatus === "COMPLETED" ? "✓ Completed" : achievement.progressStatus === "ON_TRACK" ? "⚡ On Track" : "○ Not Started"}
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "0.875rem" }}>
+                          Weight: <strong>{goal.weightage}%</strong> | UoM: <strong>{goal.uom}</strong>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", backgroundColor: "#F9FAFB", padding: "0.75rem", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                          <div style={{ textAlign: "center" }}>
+                            <div style={{ fontSize: "0.6875rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 500 }}>Target</div>
+                            <div style={{ fontWeight: 600, fontSize: "1.125rem", color: "#1a1a1a", marginTop: "0.125rem" }}>{goal.target ?? "—"}</div>
+                          </div>
+                          <div style={{ textAlign: "center", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}>
+                            <div style={{ fontSize: "0.6875rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 500 }}>{activeQuarter} Actual</div>
+                            <div style={{ fontWeight: 600, fontSize: "1.125rem", color: achievement?.actualValue !== null && achievement?.actualValue !== undefined ? "#1a1a1a" : "var(--text-muted)", marginTop: "0.125rem" }}>
+                              {achievement?.actualValue !== null && achievement?.actualValue !== undefined ? achievement.actualValue : "—"}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "center" }}>
+                            <div style={{ fontSize: "0.6875rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 500 }}>Progress Score</div>
+                            <div style={{ fontWeight: 700, fontSize: "1.125rem", color: achievement ? "var(--success, #059669)" : "var(--text-muted)", marginTop: "0.125rem" }}>
+                              {achievement ? formatScore(computeProgressScore(goal.uom as UoMType, goal.target, achievement.actualValue, achievement.progressStatus)) : "—"}
+                            </div>
                           </div>
                         </div>
                       </div>

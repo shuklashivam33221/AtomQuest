@@ -267,6 +267,23 @@ export async function updateAchievement(
     throw new Error("Unauthorized to update this goal");
   }
 
+  // Enforce quarter locking: block employees from modifying achievements if manager check-in is completed
+  if (userRole === "EMPLOYEE") {
+    const checkinExists = await prisma.checkIn.findFirst({
+      where: {
+        quarter: quarter as GoalPhase,
+        goal: {
+          employeeId: goal.employeeId,
+          cycleId: goal.cycleId,
+        },
+      },
+    });
+
+    if (checkinExists) {
+      throw new Error("This quarter check-in has been completed and is locked by your manager.");
+    }
+  }
+
   // If the goal is shared, find all linked goals in the same cycle and update them all
   if (goal.isShared) {
     const linkedGoals = await prisma.goal.findMany({
