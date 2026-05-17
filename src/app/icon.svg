@@ -1,0 +1,10 @@
+<svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" rx="24" fill="#1A1A1A"/>
+  <!-- Outer Orbits representing Brushless Motor Tech -->
+  <ellipse cx="50" cy="50" rx="38" ry="12" stroke="#FDB813" stroke-width="4" transform="rotate(-30 50 50)" stroke-dasharray="6 6" opacity="0.7"/>
+  <ellipse cx="50" cy="50" rx="38" ry="12" stroke="#FDB813" stroke-width="5" transform="rotate(30 50 50)" />
+  <ellipse cx="50" cy="50" rx="38" ry="12" stroke="#E5A510" stroke-width="5" transform="rotate(90 50 50)" />
+  <!-- Center Quest Pin -->
+  <circle cx="50" cy="50" r="10" fill="#1A1A1A" stroke="#FDB813" stroke-width="6" />
+  <circle cx="50" cy="50" r="4" fill="#FDB813" />
+</svg>

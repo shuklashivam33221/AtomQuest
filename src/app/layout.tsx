@@ -9,8 +9,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AtomQuest — Goal Setting & Tracking Portal",
+  title: "AtomQuest | Goal Setting & Tracking Portal",
   description: "In-House Goal Setting & Tracking Portal for Atomberg",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

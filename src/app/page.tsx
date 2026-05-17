@@ -39,7 +39,7 @@ export default async function Home() {
           ) : (
             <>
               <Link href="/login" className={styles.loginBtn}>Sign In</Link>
-              <Link href="/signup" className={styles.signupBtn}>Request Access</Link>
+              <Link href="/signup" className={styles.signupBtn}>Sign Up</Link>
             </>
           )}
         </div>
@@ -61,7 +61,7 @@ export default async function Home() {
           ) : (
             <>
               <Link href="/login" className={styles.primaryCta}>Sign In to Dashboard</Link>
-              <Link href="/signup" className={styles.secondaryCta}>Internal Registration</Link>
+              <Link href="/signup" className={styles.secondaryCta}>Sign Up</Link>
             </>
           )}
         </div>
