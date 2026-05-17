@@ -4,6 +4,7 @@ import { GoalPhase, UoMType, ProgressStatus, GoalStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendEmail } from "@/lib/email";
 
 export async function createGoal(formData: FormData) {
   const session = await auth();
@@ -76,6 +77,19 @@ export async function submitGoals(cycleId: string) {
     data: { status: "SUBMITTED" },
   });
 
+  const employee = await prisma.user.findUnique({ 
+    where: { id: session.user.id }, 
+    include: { manager: true } 
+  });
+  
+  if (employee?.manager) {
+    await sendEmail({
+      to: employee.manager.email,
+      subject: `Action Required: Goals Submitted by ${employee.name}`,
+      body: `${employee.name} has submitted their AtomQuest goals for approval. Please review them in your dashboard.`
+    }).catch(e => console.error("Email failed:", e));
+  }
+
   revalidatePath("/dashboard/goals");
 }
 
@@ -125,6 +139,15 @@ export async function approveGoals(employeeId: string, cycleId: string) {
     data: { status: "LOCKED" },
   });
 
+  const employee = await prisma.user.findUnique({ where: { id: employeeId } });
+  if (employee) {
+    await sendEmail({
+      to: employee.email,
+      subject: `AtomQuest Goals Approved`,
+      body: `Your goals for the current cycle have been approved and locked by your manager.`
+    }).catch(e => console.error("Email failed:", e));
+  }
+
   // Create audit logs
   if (goalsToApprove.length > 0) {
     await prisma.auditLog.createMany({
@@ -146,10 +169,21 @@ export async function returnGoal(goalId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  const goal = await prisma.goal.findUnique({ where: { id: goalId }, include: { employee: true } });
+  if (!goal) throw new Error("Goal not found");
+
   await prisma.goal.update({
     where: { id: goalId },
     data: { status: "RETURNED" },
   });
+
+  if (goal.employee) {
+    await sendEmail({
+      to: goal.employee.email,
+      subject: `AtomQuest Goal Returned for Rework`,
+      body: `Your manager has returned the goal "${goal.title}" for rework. Please update your weightages or targets and resubmit.`
+    }).catch(e => console.error("Email failed:", e));
+  }
 
   await prisma.auditLog.create({
     data: {

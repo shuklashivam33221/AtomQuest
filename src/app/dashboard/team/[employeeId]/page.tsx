@@ -13,8 +13,9 @@ export const metadata = {
 export default async function EmployeeGoalReviewPage({
   params,
 }: {
-  params: { employeeId: string };
+  params: Promise<{ employeeId: string }>;
 }) {
+  const { employeeId } = await params;
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -22,7 +23,7 @@ export default async function EmployeeGoalReviewPage({
   if (userRole === "EMPLOYEE") redirect("/dashboard");
 
   const employee = await prisma.user.findUnique({
-    where: { id: params.employeeId },
+    where: { id: employeeId },
     include: {
       goals: {
         orderBy: { createdAt: "asc" },

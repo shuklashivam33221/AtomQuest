@@ -14,6 +14,7 @@ type Goal = {
   target: number | null;
   weightage: number;
   status: string;
+  isShared: boolean;
 };
 
 export default function ManagerApprovalClient({
@@ -152,10 +153,16 @@ export default function ManagerApprovalClient({
                         style={{ padding: "0.25rem 0.5rem", width: "100%", height: "32px" }}
                         value={editValues.target}
                         onChange={e => setEditValues({ ...editValues, target: e.target.value })}
-                        disabled={isPending}
+                        disabled={isPending || goal.isShared}
+                        title={goal.isShared ? "Target cannot be edited for shared goals" : ""}
                       />
                     ) : (
-                      goal.target ?? "—"
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span>{goal.target ?? "—"}</span>
+                        {goal.isShared && (
+                          <span style={{ fontSize: "0.65rem", color: "var(--primary)", fontWeight: 600, marginTop: "0.125rem", textTransform: "uppercase" }}>Shared KPI</span>
+                        )}
+                      </div>
                     )}
                   </td>
                   

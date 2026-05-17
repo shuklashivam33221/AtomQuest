@@ -24,6 +24,7 @@ type CheckIn = {
   goalId: string;
   managerComment: string;
   checkinDate: Date;
+  goal?: { employeeId: string };
 };
 
 export default function CheckinClient({
@@ -43,16 +44,21 @@ export default function CheckinClient({
 
   const handleSave = () => {
     if (!comment.trim()) return;
+
+    if (activeGoals.length === 0) {
+      alert("Cannot save check-in. The employee has no active goals to link this feedback against.");
+      return;
+    }
     
     startTransition(async () => {
-      // In a real app we might attach checkins to specific goals.
-      // For this demo, if there are goals, we attach to the first one.
-      const targetGoalId = activeGoals.length > 0 ? activeGoals[0].id : "general-checkin";
+      const targetGoalId = activeGoals[0].id;
       await saveCheckIn(targetGoalId, activeQuarter, comment);
       setComment("");
       alert("Check-in saved successfully!");
     });
   };
+
+  const memberCheckins = initialCheckins.filter(c => c.goal?.employeeId === activeMember?.id);
 
   return (
     <div className={styles.wrapper}>
@@ -60,7 +66,6 @@ export default function CheckinClient({
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <h2 className={styles.sidebarTitle}>My 1:1s</h2>
-          <button className={styles.iconBtn}><Plus size={16} /></button>
         </div>
         
         <div className={styles.list}>
@@ -105,9 +110,15 @@ export default function CheckinClient({
                 <option value="Q3">Q3</option>
                 <option value="Q4">Q4</option>
               </select>
-              <button className="btn btn-secondary" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <a 
+                href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_AtomQuestDemo" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="btn btn-secondary" 
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}
+              >
                 <Video size={16} /> Join Call
-              </button>
+              </a>
             </div>
           </div>
 
@@ -174,8 +185,8 @@ export default function CheckinClient({
                 <div style={{ marginTop: "2rem" }}>
                   <div className={styles.sectionTitleBlack} style={{ marginBottom: "1rem" }}>PREVIOUS NOTES</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    {initialCheckins.filter(c => c.managerComment).length > 0 ? (
-                      initialCheckins.map(c => (
+                    {memberCheckins.filter(c => c.managerComment).length > 0 ? (
+                      memberCheckins.filter(c => c.managerComment).map(c => (
                         <div key={c.id} style={{ fontSize: "0.8125rem", borderLeft: "2px solid var(--border)", paddingLeft: "0.75rem", color: "var(--text-secondary)" }}>
                           <div style={{ fontSize: "0.6875rem", color: "var(--text-muted)", marginBottom: "0.25rem" }}>
                             {new Date(c.checkinDate).toLocaleDateString()}

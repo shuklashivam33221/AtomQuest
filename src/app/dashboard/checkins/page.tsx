@@ -53,6 +53,7 @@ export default async function CheckinsPage() {
 
   const allCheckins = await prisma.checkIn.findMany({
     where: { managerId: session.user.id },
+    include: { goal: { select: { employeeId: true } } },
     orderBy: { checkinDate: "desc" },
   });
 
