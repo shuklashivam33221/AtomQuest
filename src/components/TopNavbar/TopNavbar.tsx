@@ -1,14 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Target, Search, Bell } from "lucide-react";
 import styles from "./TopNavbar.module.css";
 
+type NotificationItem = {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  date: string;
+};
+
 type TopNavbarProps = {
   userName: string;
   userRole: string;
+  notifications?: NotificationItem[];
 };
 
 // Role-specific navigation
@@ -46,9 +56,11 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export default function TopNavbar({ userName, userRole }: TopNavbarProps) {
+export default function TopNavbar({ userName, userRole, notifications = [] }: TopNavbarProps) {
   const pathname = usePathname();
   const navItems = NAV_BY_ROLE[userRole] || NAV_BY_ROLE.EMPLOYEE;
+  const [showNotifications, setShowNotifications] = useState(false);
+  const unreadCount = notifications.length;
 
   return (
     <header className={styles.navbar}>
@@ -91,14 +103,49 @@ export default function TopNavbar({ userName, userRole }: TopNavbarProps) {
           />
         </div>
 
-        <button 
-          className={styles.iconButton} 
-          aria-label="Notifications"
-          onClick={() => alert("All caught up! No new notifications.")}
-        >
-          <Bell />
-          <span className={styles.notifDot} />
-        </button>
+        <div style={{ position: "relative" }}>
+          <button 
+            className={styles.iconButton} 
+            aria-label="Notifications"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            <Bell />
+            {unreadCount > 0 && <span className={styles.notifDot} />}
+          </button>
+
+          {showNotifications && (
+            <div className={styles.notifDropdown}>
+              <div className={styles.notifHeader}>
+                <span>Notifications</span>
+                {unreadCount > 0 && <span className={styles.notifBadge}>{unreadCount} New</span>}
+              </div>
+              <div className={styles.notifList}>
+                {unreadCount === 0 ? (
+                  <div className={styles.notifEmpty}>
+                    🎈 All caught up! No new notifications.
+                  </div>
+                ) : (
+                  notifications.map((notif) => (
+                    <div key={notif.id} className={styles.notifItem}>
+                      <div className={styles.notifItemHeader}>
+                        <span className={styles.notifIcon}>
+                          {notif.type === "rework" && "⚠️"}
+                          {notif.type === "feedback" && "💬"}
+                          {notif.type === "shared" && "📌"}
+                          {notif.type === "approval" && "✅"}
+                          {notif.type === "submission" && "📥"}
+                        </span>
+                        <strong className={styles.notifTitle}>{notif.title}</strong>
+                        <span className={styles.notifDate}>{notif.date}</span>
+                      </div>
+                      <p className={styles.notifMessage}>{notif.message}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className={styles.avatarMenu}>
           <div className={styles.avatarWrapper}>
