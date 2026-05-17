@@ -18,6 +18,7 @@ function revalidatePath(path: string) {
   }
 }
 import { sendEmail } from "@/lib/email";
+import { sendTeamsNotification } from "./teams";
 
 export async function createGoal(formData: FormData) {
   const session = await auth();
@@ -121,6 +122,19 @@ export async function submitGoals(cycleId: string) {
       subject: `Action Required: Goals Submitted by ${employee.name}`,
       body: `${employee.name} has submitted their AtomQuest goals for approval. Please review them in your dashboard.`
     }).catch(e => console.error("Email failed:", e));
+
+    const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const deepLinkUrl = `${appUrl}/dashboard/team/${employee.id}`;
+    const activeCycle = await prisma.goalCycle.findUnique({ where: { id: cycleId } });
+
+    await sendTeamsNotification({
+      managerEmail: employee.manager.email,
+      employeeName: employee.name,
+      actionType: "SUBMITTED",
+      cycleName: activeCycle?.name || "OKR Cycle",
+      goalsCount: goals.length,
+      deepLinkUrl
+    }).catch(e => console.error("Teams alert failed:", e));
   }
 
   revalidatePath("/dashboard/goals");
@@ -605,4 +619,48 @@ export async function requestFeedbackAction(employeeId: string, subject: string,
 
   return { success: true };
 }
+
+export async function triggerCheckInReminders(cycleId: string) {
+  const session = await auth();
+  if (!session?.user?.id || (session.user as { role?: string }).role !== "ADMIN") {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
+  const cycle = await prisma.goalCycle.findUnique({ where: { id: cycleId } });
+  if (!cycle) throw new Error("Cycle not found");
+
+  const employees = await prisma.user.findMany({
+    where: { role: "EMPLOYEE" },
+    include: {
+      goals: {
+        where: { cycleId },
+        include: {
+          checkIns: {
+            where: { quarter: cycle.phase }
+          }
+        }
+      }
+    }
+  });
+
+  let reminderCount = 0;
+  const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
+  for (const emp of employees) {
+    if (emp.goals.length > 0) {
+      const pendingGoals = emp.goals.filter(g => g.checkIns.length === 0);
+      if (pendingGoals.length > 0) {
+        await sendEmail({
+          to: emp.email,
+          subject: `Reminder: Complete your ${cycle.phase} Check-in`,
+          body: `Hi ${emp.name},\n\nThis is a friendly reminder to complete your check-ins and log actual achievements for the ${cycle.phase} quarter under the cycle "${cycle.name}".\n\nPlease navigate to the portal to update your actual achievement values against targets: ${appUrl}/dashboard/goals`
+        }).catch(e => console.error(`Failed to send reminder to ${emp.email}:`, e));
+        reminderCount++;
+      }
+    }
+  }
+
+  return { success: true, reminderCount };
+}
+
 

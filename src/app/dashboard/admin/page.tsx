@@ -7,6 +7,7 @@ import UnlockGoalForm from "./UnlockGoalForm";
 import CycleManagerClient from "./CycleManagerClient";
 import SharedGoalForm from "./SharedGoalForm";
 import OrgHierarchyManager from "./OrgHierarchyManager";
+import BroadcastRemindersForm from "./BroadcastRemindersForm";
 import { Users } from "lucide-react";
 
 export const metadata = {
@@ -283,9 +284,14 @@ export default async function AdminPage() {
           <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "1rem", marginTop: "1rem" }}>
             Download a comprehensive CSV report containing all goals, targets, quarterly achievements, and auto-computed progress scores.
           </p>
-          <a href="/api/admin/export" download className="btn btn-primary" style={{ display: "inline-flex", textDecoration: "none" }}>
-            Download CSV Report
-          </a>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+            <a href="/api/admin/export" download className="btn btn-primary" style={{ display: "inline-flex", textDecoration: "none" }}>
+              Download CSV Report
+            </a>
+            {activeCycle && (
+              <BroadcastRemindersForm cycleId={activeCycle.id} />
+            )}
+          </div>
 
           <div className={styles.sectionHeading} style={{ marginTop: "2rem" }}>
             <Share2 size={16} className={styles.headingIcon} /> Department Shared Goals
