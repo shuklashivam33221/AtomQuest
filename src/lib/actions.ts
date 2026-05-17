@@ -4,6 +4,7 @@ import { GoalPhase, UoMType, ProgressStatus, GoalStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath as nextRevalidatePath } from "next/cache";
+import { isPhaseActionAllowed } from "@/lib/schedule";
 
 function revalidatePath(path: string) {
   try {
@@ -21,6 +22,14 @@ import { sendEmail } from "@/lib/email";
 export async function createGoal(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const userRole = (session.user as { role?: string }).role;
+  if (userRole === "EMPLOYEE") {
+    const allowed = await isPhaseActionAllowed("GOAL_SETTING");
+    if (!allowed) {
+      throw new Error("Goal creation is only allowed during the Goal Setting phase (starting May 1st).");
+    }
+  }
 
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
@@ -75,6 +84,14 @@ export async function submitGoals(cycleId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  const userRole = (session.user as { role?: string }).role;
+  if (userRole === "EMPLOYEE") {
+    const allowed = await isPhaseActionAllowed("GOAL_SETTING");
+    if (!allowed) {
+      throw new Error("Goal submission is only allowed during the Goal Setting phase (starting May 1st).");
+    }
+  }
+
   const goals = await prisma.goal.findMany({
     where: { employeeId: session.user.id, cycleId },
   });
@@ -113,6 +130,14 @@ export async function deleteGoal(goalId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  const userRole = (session.user as { role?: string }).role;
+  if (userRole === "EMPLOYEE") {
+    const allowed = await isPhaseActionAllowed("GOAL_SETTING");
+    if (!allowed) {
+      throw new Error("Goal deletion is only allowed during the Goal Setting phase (starting May 1st).");
+    }
+  }
+
   const goal = await prisma.goal.findUnique({ where: { id: goalId } });
   if (!goal || goal.employeeId !== session.user.id) throw new Error("Unauthorized");
   if (goal.status !== "DRAFT") throw new Error("Can only delete draft goals");
@@ -125,6 +150,14 @@ export async function deleteGoal(goalId: string) {
 export async function editGoalAsEmployee(goalId: string, weightage: number) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const userRole = (session.user as { role?: string }).role;
+  if (userRole === "EMPLOYEE") {
+    const allowed = await isPhaseActionAllowed("GOAL_SETTING");
+    if (!allowed) {
+      throw new Error("Goal editing is only allowed during the Goal Setting phase (starting May 1st).");
+    }
+  }
 
   const goal = await prisma.goal.findUnique({ where: { id: goalId } });
   if (!goal || goal.employeeId !== session.user.id) throw new Error("Unauthorized");
@@ -145,6 +178,11 @@ export async function editGoalAsEmployee(goalId: string, weightage: number) {
 export async function approveGoals(employeeId: string, cycleId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const role = (session.user as { role?: string }).role;
+  if (role !== "MANAGER" && role !== "ADMIN") {
+    throw new Error("Unauthorized: Manager or Admin access required");
+  }
 
   const goalsToApprove = await prisma.goal.findMany({
     where: { employeeId, cycleId, status: "SUBMITTED" },
@@ -185,6 +223,11 @@ export async function returnGoal(goalId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  const role = (session.user as { role?: string }).role;
+  if (role !== "MANAGER" && role !== "ADMIN") {
+    throw new Error("Unauthorized: Manager or Admin access required");
+  }
+
   const goal = await prisma.goal.findUnique({ where: { id: goalId }, include: { employee: true } });
   if (!goal) throw new Error("Goal not found");
 
@@ -218,6 +261,11 @@ export async function returnGoal(goalId: string) {
 export async function editGoalAsManager(goalId: string, target: number | null, weightage: number) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const role = (session.user as { role?: string }).role;
+  if (role !== "MANAGER" && role !== "ADMIN") {
+    throw new Error("Unauthorized: Manager or Admin access required");
+  }
 
   const goal = await prisma.goal.findUnique({ where: { id: goalId } });
   if (!goal) throw new Error("Goal not found");
@@ -267,8 +315,13 @@ export async function updateAchievement(
     throw new Error("Unauthorized to update this goal");
   }
 
-  // Enforce quarter locking: block employees from modifying achievements if manager check-in is completed
+  // Enforce quarter locking & schedule window checks for employees
   if (userRole === "EMPLOYEE") {
+    const allowed = await isPhaseActionAllowed(quarter as GoalPhase);
+    if (!allowed) {
+      throw new Error(`Achievement updates for ${quarter} are only allowed during its scheduled check-in window.`);
+    }
+
     const checkinExists = await prisma.checkIn.findFirst({
       where: {
         quarter: quarter as GoalPhase,
@@ -358,6 +411,11 @@ export async function saveCheckIn(
 ) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const role = (session.user as { role?: string }).role;
+  if (role !== "MANAGER" && role !== "ADMIN") {
+    throw new Error("Unauthorized: Manager or Admin access required");
+  }
 
   await prisma.checkIn.create({
     data: {
