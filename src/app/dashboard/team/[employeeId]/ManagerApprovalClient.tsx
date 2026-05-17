@@ -122,20 +122,47 @@ export default function ManagerApprovalClient({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {isLocked && (
-        <div style={{ 
-          padding: "1rem 1.25rem", 
-          backgroundColor: "#e6fffa", 
-          border: "1px solid #319795", 
-          color: "#234e52", 
-          borderRadius: "var(--radius-md)", 
-          fontWeight: 500,
-          fontSize: "0.875rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem"
-        }}>
-          <span>🎉</span>
-          <span><strong>Success:</strong> Goals Approved & Locked. A real-time email notification has been successfully dispatched to the employee notifying them of approval.</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ 
+            padding: "1rem 1.25rem", 
+            backgroundColor: "#e6fffa", 
+            border: "1px solid #319795", 
+            color: "#234e52", 
+            borderRadius: "var(--radius-md)", 
+            fontWeight: 500,
+            fontSize: "0.875rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem"
+          }}>
+            <span>🎉</span>
+            <span><strong>Success:</strong> Goals Approved & Locked. A real-time email notification has been successfully dispatched to the employee.</span>
+          </div>
+
+          <div style={{ 
+            padding: "1.25rem", 
+            backgroundColor: "var(--surface)", 
+            border: "1px solid var(--border)", 
+            borderRadius: "var(--radius-md)", 
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
+          }}>
+            <div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, margin: "0 0 0.25rem 0", color: "var(--text-primary)" }}>Phase 2: Track Achievements</h3>
+              <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", margin: 0 }}>
+                Goals are now locked. Track the employee's actual growth, view progress scores, and log your quarterly 1:1 check-in notes.
+              </p>
+            </div>
+            <a 
+              href="/dashboard/checkins" 
+              className="btn btn-primary"
+              style={{ textDecoration: "none", whiteSpace: "nowrap", padding: "0.625rem 1.25rem" }}
+            >
+              Go to Check-ins Module →
+            </a>
+          </div>
         </div>
       )}
       
