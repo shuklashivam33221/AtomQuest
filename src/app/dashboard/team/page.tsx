@@ -1,12 +1,9 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Users, CheckCircle, AlertCircle, Calendar, Mail, UserSearch } from "lucide-react";
-import StatusBadge from "@/components/StatusBadge/StatusBadge";
+import { Users, CheckCircle, AlertCircle } from "lucide-react";
 import TeamActionsClient from "./TeamActionsClient";
 import styles from "../page.module.css";
-import teamStyles from "./Team.module.css";
 import TeamListClient from "./TeamListClient";
 
 export const metadata = {

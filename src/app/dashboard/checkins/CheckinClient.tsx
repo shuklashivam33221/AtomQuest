@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Video, Target, Save } from "lucide-react";
+import { Video, Target, Save } from "lucide-react";
 import styles from "./Checkins.module.css";
 import { saveCheckIn } from "@/lib/actions";
 import { computeProgressScore, formatScore } from "@/lib/scoring";

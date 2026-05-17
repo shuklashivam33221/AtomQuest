@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useState } from "react";
 import { approveGoals, returnGoal, editGoalAsManager } from "@/lib/actions";
 import StatusBadge from "@/components/StatusBadge/StatusBadge";
 import { Check, X, Lock, Save, Edit2 } from "lucide-react";

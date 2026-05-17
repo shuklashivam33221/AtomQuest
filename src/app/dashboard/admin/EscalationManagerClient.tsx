@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateEscalationRuleDays, runEscalationEngine } from "@/lib/actions";
-import { ShieldAlert, RefreshCw, Save, Clock } from "lucide-react";
+import { RefreshCw, Save, Clock } from "lucide-react";
 import styles from "../page.module.css";
 
 interface EscalationRule {
@@ -24,8 +24,9 @@ export default function EscalationManagerClient({ initialRules }: { initialRules
         await updateEscalationRuleDays(triggerType, daysLimit);
         setRules(prev => prev.map(r => r.triggerType === triggerType ? { ...r, daysLimit } : r));
         setMessage({ type: "success", text: `Successfully updated threshold for ${triggerType.replace(/_/g, " ")}.` });
-      } catch (err: any) {
-        setMessage({ type: "error", text: err.message });
+      } catch (err) {
+        const e = err as Error;
+        setMessage({ type: "error", text: e.message });
       }
     });
   };
@@ -36,8 +37,9 @@ export default function EscalationManagerClient({ initialRules }: { initialRules
       try {
         const result = await runEscalationEngine();
         setMessage({ type: "success", text: result.message });
-      } catch (err: any) {
-        setMessage({ type: "error", text: err.message });
+      } catch (err) {
+        const e = err as Error;
+        setMessage({ type: "error", text: e.message });
       }
     });
   };

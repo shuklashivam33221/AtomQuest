@@ -22,7 +22,7 @@ export default function OrgHierarchyManager({ employees, managers }: OrgHierarch
   const [search, setSearch] = useState("");
   const [syncing, setSyncing] = useState(false);
   const [syncLogs, setSyncLogs] = useState<string[]>([]);
-  const [syncCompleted, setSyncCompleted] = useState(false);
+  const [, setSyncCompleted] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isPending, startTransition] = useTransition();

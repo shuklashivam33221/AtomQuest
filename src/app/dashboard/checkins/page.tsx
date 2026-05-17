@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Video, Plus, MessageSquare } from "lucide-react";
+
 import styles from "../page.module.css";
 import checkinStyles from "./Checkins.module.css";
 import CheckinClient from "./CheckinClient";
@@ -34,6 +34,7 @@ export default async function CheckinsPage() {
         include: { achievements: true }
       } : { where: { id: "none" } }
     },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any; // Type cast to any for simplify, since TeamMember expects Goal[] with achievements array
 
   if (teamMembers.length === 0) {

@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { triggerCheckInReminders } from "@/lib/actions";
 import { Bell } from "lucide-react";
-import styles from "../page.module.css";
 
 export default function BroadcastRemindersForm({ cycleId }: { cycleId: string }) {
   const [isPending, startTransition] = useTransition();

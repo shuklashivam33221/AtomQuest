@@ -6,7 +6,15 @@ import { Users, Mail, Calendar, UserSearch } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge/StatusBadge";
 import teamStyles from "./Team.module.css";
 
-export default function TeamListClient({ teamMembers }: { teamMembers: any[] }) {
+type TeamMember = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  goals: { status: string; weightage: number }[];
+};
+
+export default function TeamListClient({ teamMembers }: { teamMembers: TeamMember[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   
   const filteredMembers = teamMembers.filter(member => 
@@ -45,8 +53,8 @@ export default function TeamListClient({ teamMembers }: { teamMembers: any[] }) 
             </tr>
           ) : (
             filteredMembers.map(member => {
-              const hasSubmitted = member.goals.some((g: any) => g.status === "SUBMITTED");
-              const isLocked = member.goals.length > 0 && member.goals.every((g: any) => g.status === "LOCKED");
+              const hasSubmitted = member.goals.some((g) => g.status === "SUBMITTED");
+              const isLocked = member.goals.length > 0 && member.goals.every((g) => g.status === "LOCKED");
               
               let goalStatus = "NOT_STARTED";
               if (hasSubmitted) goalStatus = "SUBMITTED";

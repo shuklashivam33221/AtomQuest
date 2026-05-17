@@ -1,5 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Target } from "lucide-react";
 import styles from "./home.module.css";

@@ -79,7 +79,7 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
     });
   }
 
-  const startEditing = (goal: any) => {
+  const startEditing = (goal: GoalFormProps["existingGoals"][0]) => {
     setEditingGoalId(goal.id);
     setEditWeightage(goal.weightage.toString());
   };

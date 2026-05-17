@@ -34,7 +34,7 @@ async function main() {
   const employeePass = await bcrypt.hash("employee123", 10);
 
   // Create Admin
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Priya Sharma",
       email: "admin@atomberg.com",
@@ -88,7 +88,7 @@ async function main() {
     },
   });
 
-  const emp3 = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Vikram Singh",
       email: "vikram@atomberg.com",
@@ -111,7 +111,7 @@ async function main() {
     },
   });
 
-  const emp5 = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Rohan Gupta",
       email: "rohan@atomberg.com",
@@ -122,7 +122,7 @@ async function main() {
     },
   });
 
-  const emp6 = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Kavita Nair",
       email: "kavita@atomberg.com",

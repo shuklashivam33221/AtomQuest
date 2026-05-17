@@ -1,4 +1,4 @@
-import { GoalPhase, UoMType } from "@prisma/client";
+import { UoMType } from "@prisma/client";
 
 /**
  * Computes the progress score for a given achievement against its target,
