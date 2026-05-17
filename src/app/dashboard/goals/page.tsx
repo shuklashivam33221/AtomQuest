@@ -56,7 +56,7 @@ export default async function GoalsPage() {
         <div>
           <h1 className={styles.title}>My Goal Sheet</h1>
           <p className={styles.cycleInfo}>
-            {activeCycle.name} — Phase: <span className={styles.cycleStrong}>{activeCycle.phase}</span>
+            {activeCycle.name} — Phase: <span className={styles.phaseBadge}>Goal Setting Phase</span>
           </p>
         </div>
         {isLocked && (

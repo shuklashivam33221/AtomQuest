@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { createGoal, deleteGoal, submitGoals } from "@/lib/actions";
+import { createGoal, deleteGoal, submitGoals, editGoalAsEmployee } from "@/lib/actions";
 import StatusBadge from "@/components/StatusBadge/StatusBadge";
-import { Trash2, Plus, Send } from "lucide-react";
+import { Trash2, Plus, Send, Edit2, Save, X } from "lucide-react";
 import styles from "./GoalForm.module.css";
 
 type GoalFormProps = {
@@ -16,6 +16,7 @@ type GoalFormProps = {
     target: number | null;
     weightage: number;
     status: string;
+    isShared: boolean;
   }>;
 };
 
@@ -42,6 +43,8 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editWeightage, setEditWeightage] = useState<string>("");
 
   const totalWeightage = existingGoals.reduce((sum, g) => sum + g.weightage, 0);
   const draftGoals = existingGoals.filter((g) => g.status === "DRAFT");
@@ -75,6 +78,34 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
     });
   }
 
+  const startEditing = (goal: any) => {
+    setEditingGoalId(goal.id);
+    setEditWeightage(goal.weightage.toString());
+  };
+
+  const cancelEditing = () => {
+    setEditingGoalId(null);
+    setEditWeightage("");
+    setError("");
+  };
+
+  const saveEdit = async (goalId: string) => {
+    const weightageNum = parseInt(editWeightage, 10);
+    if (isNaN(weightageNum) || weightageNum < 10) {
+      setError("Weightage must be at least 10%");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await editGoalAsEmployee(goalId, weightageNum);
+        setEditingGoalId(null);
+      } catch (err) {
+        const e = err as Error;
+        setError(e.message);
+      }
+    });
+  };
+
   async function handleSubmit() {
     if (!confirm("Submit all goals for approval? You won't be able to edit after submission.")) return;
     startTransition(async () => {
@@ -97,6 +128,9 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
             {totalWeightage}%
           </strong>
           <span className={styles.weightageHint}>/ 100%</span>
+          {totalWeightage < 100 && (
+            <span className={styles.weightageRemaining}>({100 - totalWeightage}% more required to submit)</span>
+          )}
         </div>
         <div className={styles.progressTrack}>
           <div
@@ -128,18 +162,56 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
                   <td><span className={styles.thrustTag}>{goal.thrustArea}</span></td>
                   <td className={styles.uomCell}>{UOM_OPTIONS.find(u => u.value === goal.uom)?.label || goal.uom}</td>
                   <td>{goal.target ?? "—"}</td>
-                  <td><strong>{goal.weightage}%</strong></td>
+                  <td>
+                    {editingGoalId === goal.id ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <input
+                          type="number"
+                          className={styles.input}
+                          style={{ padding: "0.25rem 0.5rem", width: "60px", height: "32px", minHeight: "auto" }}
+                          value={editWeightage}
+                          onChange={e => setEditWeightage(e.target.value)}
+                          disabled={isPending}
+                          min={10}
+                          max={100}
+                        />
+                        <span style={{ fontSize: "0.875rem" }}>%</span>
+                      </div>
+                    ) : (
+                      <strong>{goal.weightage}%</strong>
+                    )}
+                  </td>
                   <td><StatusBadge status={goal.status} size="sm" /></td>
                   <td>
                     {goal.status === "DRAFT" && (
-                      <button
-                        className={styles.deleteBtn}
-                        onClick={() => handleDelete(goal.id)}
-                        disabled={isPending}
-                        title="Delete goal"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        {editingGoalId === goal.id ? (
+                          <>
+                            <button className="btn btn-primary" style={{ padding: "0.25rem 0.5rem" }} onClick={() => saveEdit(goal.id)} disabled={isPending} title="Save">
+                              <Save size={14} />
+                            </button>
+                            <button className="btn btn-secondary" style={{ padding: "0.25rem 0.5rem" }} onClick={cancelEditing} disabled={isPending} title="Cancel">
+                              <X size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="btn btn-secondary" style={{ padding: "0.25rem 0.5rem", color: "var(--info)" }} onClick={() => startEditing(goal)} disabled={isPending || editingGoalId !== null} title="Edit Weightage">
+                              <Edit2 size={14} />
+                            </button>
+                            {!goal.isShared && (
+                              <button
+                                className={styles.deleteBtn}
+                                onClick={() => handleDelete(goal.id)}
+                                disabled={isPending || editingGoalId !== null}
+                                title="Delete goal"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -172,7 +244,7 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Unit of Measurement *</label>
+                  <label className={styles.label}>UoM *</label>
                   <select name="uom" required className={styles.input}>
                     <option value="">Select...</option>
                     {UOM_OPTIONS.map((u) => (
@@ -185,7 +257,7 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
                   <input name="target" type="number" step="0.01" className={styles.input} placeholder="e.g., 95" />
                 </div>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Weightage (%) *</label>
+                  <label className={styles.label}>Weightage (%) * <small>(Min 10%)</small></label>
                   <input name="weightage" type="number" min="10" max={100 - totalWeightage} required className={styles.input} placeholder={`10-${100 - totalWeightage}`} />
                 </div>
                 <div className={styles.formGroupFull}>
@@ -207,10 +279,16 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
                   <Plus size={16} /> Add Goal
                 </button>
               )}
-              {canSubmit && (
-                <button className="btn btn-primary" onClick={handleSubmit} disabled={isPending}>
-                  <Send size={16} /> {isPending ? "Submitting..." : "Submit All for Approval"}
-                </button>
+              {totalWeightage === 100 && canSubmit && (
+                <div className={styles.submitSection}>
+                   <p className={styles.submitNotice}>Total weightage is 100%. You can now submit for approval.</p>
+                   <button className="btn btn-primary" onClick={handleSubmit} disabled={isPending}>
+                     <Send size={16} /> {isPending ? "Submitting..." : "Submit Goal Sheet for Approval"}
+                   </button>
+                </div>
+              )}
+              {totalWeightage > 100 && (
+                <p className={styles.errorText}>Warning: Total weightage exceeds 100%. Please delete or adjust goals.</p>
               )}
             </div>
           )}

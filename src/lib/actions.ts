@@ -13,13 +13,16 @@ export async function createGoal(formData: FormData) {
   const description = formData.get("description") as string;
   const thrustArea = formData.get("thrustArea") as string;
   const uom = formData.get("uom") as string;
-  const target = parseFloat(formData.get("target") as string) || null;
+  const targetValue = formData.get("target") as string;
+  const target = targetValue ? parseFloat(targetValue) : null;
   const weightage = parseInt(formData.get("weightage") as string, 10);
   const cycleId = formData.get("cycleId") as string;
 
-  if (!title || !thrustArea || !uom || !weightage || !cycleId) {
-    throw new Error("Missing required fields");
-  }
+  if (!title) throw new Error("Goal Title is required");
+  if (!thrustArea) throw new Error("Thrust Area is required");
+  if (!uom) throw new Error("Unit of Measure (UoM) is required");
+  if (isNaN(weightage)) throw new Error("Weightage is required and must be a number");
+  if (!cycleId) throw new Error("Cycle ID is missing");
 
   // Validate weightage constraints
   const existingGoals = await prisma.goal.findMany({
@@ -83,8 +86,29 @@ export async function deleteGoal(goalId: string) {
   const goal = await prisma.goal.findUnique({ where: { id: goalId } });
   if (!goal || goal.employeeId !== session.user.id) throw new Error("Unauthorized");
   if (goal.status !== "DRAFT") throw new Error("Can only delete draft goals");
+  if (goal.isShared) throw new Error("Cannot delete shared goals");
 
   await prisma.goal.delete({ where: { id: goalId } });
+  revalidatePath("/dashboard/goals");
+}
+
+export async function editGoalAsEmployee(goalId: string, weightage: number) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const goal = await prisma.goal.findUnique({ where: { id: goalId } });
+  if (!goal || goal.employeeId !== session.user.id) throw new Error("Unauthorized");
+  if (goal.status !== "DRAFT" && goal.status !== "RETURNED") {
+    throw new Error("Can only edit draft or returned goals");
+  }
+
+  if (weightage < 10) throw new Error("Minimum weightage is 10%");
+
+  await prisma.goal.update({
+    where: { id: goalId },
+    data: { weightage },
+  });
+
   revalidatePath("/dashboard/goals");
 }
 
@@ -179,6 +203,19 @@ export async function updateAchievement(
 ) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const goal = await prisma.goal.findUnique({ where: { id: goalId } });
+  if (!goal) throw new Error("Goal not found");
+
+  const userRole = (session.user as { role?: string }).role;
+
+  if (goal.isShared && userRole === "EMPLOYEE") {
+    throw new Error("Shared goals are auto-synced and cannot be updated by employees");
+  }
+
+  if (!goal.isShared && goal.employeeId !== session.user.id && userRole !== "ADMIN" && userRole !== "MANAGER") {
+    throw new Error("Unauthorized to update this goal");
+  }
 
   const existing = await prisma.achievement.findFirst({
     where: { goalId, quarter: quarter as GoalPhase },

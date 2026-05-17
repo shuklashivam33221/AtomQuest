@@ -43,6 +43,13 @@
   font-size: 0.875rem;
 }
 
+.weightageRemaining {
+  color: #6B7280;
+  font-size: 0.75rem;
+  font-style: italic;
+  margin-left: 0.5rem;
+}
+
 .progressTrack {
   height: 0.5rem;
   background-color: #F3F4F6;
@@ -214,9 +221,36 @@
 /* Bottom Actions */
 .addActions {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: 1rem 0;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding: 2.5rem;
+  background-color: #FAFAFA;
+  border-radius: 0.75rem;
+  border: 2px dashed #E5E7EB;
+}
+
+.submitSection {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.submitNotice {
+  font-size: 0.9375rem;
+  color: #059669;
+  font-weight: 600;
+  margin: 0;
+}
+
+.errorText {
+  color: #DC2626;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .error {

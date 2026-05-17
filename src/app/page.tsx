@@ -11,9 +11,6 @@ export const metadata = {
 
 export default async function Home() {
   const session = await auth();
-  if (session?.user) {
-    redirect("/dashboard");
-  }
 
   return (
     <div className={styles.page}>
@@ -34,8 +31,17 @@ export default async function Home() {
         </div>
 
         <div className={styles.navAuth}>
-          <Link href="/login" className={styles.loginBtn}>Sign In</Link>
-          <Link href="/signup" className={styles.signupBtn}>Request Access</Link>
+          {session?.user ? (
+            <>
+              <span className={styles.userName}>Hello, {session.user.name}</span>
+              <Link href="/dashboard" className={styles.signupBtn}>Go to Dashboard</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className={styles.loginBtn}>Sign In</Link>
+              <Link href="/signup" className={styles.signupBtn}>Request Access</Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -50,8 +56,14 @@ export default async function Home() {
           track progress in real-time, and drive a culture of high performance across all departments.
         </p>
         <div className={styles.ctaGroup}>
-          <Link href="/login" className={styles.primaryCta}>Sign In to Dashboard</Link>
-          <Link href="/signup" className={styles.secondaryCta}>Internal Registration</Link>
+          {session?.user ? (
+            <Link href="/dashboard" className={styles.primaryCta}>Go to Dashboard</Link>
+          ) : (
+            <>
+              <Link href="/login" className={styles.primaryCta}>Sign In to Dashboard</Link>
+              <Link href="/signup" className={styles.secondaryCta}>Internal Registration</Link>
+            </>
+          )}
         </div>
 
         <div className={styles.heroImageMockup}>

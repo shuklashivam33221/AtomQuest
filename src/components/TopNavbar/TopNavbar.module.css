@@ -160,6 +160,12 @@
 
 .avatarMenu {
   margin-left: 0.25rem;
+  position: relative;
+}
+
+.avatarWrapper {
+  position: relative;
+  padding-bottom: 0.5rem; /* Bridge to dropdown */
 }
 
 .avatar {
@@ -174,10 +180,66 @@
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: transform 0.15s ease;
+}
+
+.avatarWrapper:hover .dropdown {
+  display: block;
+  animation: dropdownFade 0.2s ease-out;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 200px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.75rem 0;
+  z-index: 100;
+}
+
+.userInfo {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.userName {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.userRole {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.logoutBtn {
+  width: 100%;
+  text-align: left;
+  padding: 0.625rem 1rem;
+  background: none;
   border: none;
+  color: var(--danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
-.avatar:hover {
-  background-color: var(--primary-dark);
+.logoutBtn:hover {
+  background-color: var(--surface-dark);
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }

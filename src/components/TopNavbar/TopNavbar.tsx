@@ -86,19 +86,33 @@ export default function TopNavbar({ userName, userRole }: TopNavbarProps) {
           />
         </div>
 
-        <button className={styles.iconButton} aria-label="Notifications">
+        <button 
+          className={styles.iconButton} 
+          aria-label="Notifications"
+          onClick={() => alert("All caught up! No new notifications.")}
+        >
           <Bell />
           <span className={styles.notifDot} />
         </button>
 
         <div className={styles.avatarMenu}>
-          <button
-            className={styles.avatar}
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            title={`Signed in as ${userName} (${userRole}) — Click to sign out`}
-          >
-            {getInitials(userName)}
-          </button>
+          <div className={styles.avatarWrapper}>
+            <div className={styles.avatar}>
+              {getInitials(userName)}
+            </div>
+            <div className={styles.dropdown}>
+              <div className={styles.userInfo}>
+                <span className={styles.userName}>{userName}</span>
+                <span className={styles.userRole}>{userRole}</span>
+              </div>
+              <button
+                className={styles.logoutBtn}
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </header>

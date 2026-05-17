@@ -65,7 +65,13 @@
 .navAuth {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+}
+
+.userName {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
 }
 
 .loginBtn {

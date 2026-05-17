@@ -14,6 +14,7 @@ type Goal = {
   target: number | null;
   uom: string;
   weightage: number;
+  isShared: boolean;
   achievements: { quarter: GoalPhase; actualValue: number | null; progressStatus: ProgressStatus }[];
 };
 
@@ -55,6 +56,10 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
           <option value="Q4">Q4</option>
         </select>
       </div>
+      
+      <div style={{ padding: "0.75rem", backgroundColor: "var(--info-bg, #e0f2fe)", border: "1px solid var(--info-border, #bae6fd)", borderRadius: "var(--radius-md)", marginBottom: "1rem", fontSize: "0.8125rem", color: "var(--info-text, #0369a1)" }}>
+        <strong>💡 Hackathon Note:</strong> All quarterly check-in windows (Q1-Q4) are manually accessible for end-to-end testing. In production, these windows are system-locked to their respective months (July, Oct, Jan, March) as per the BRD.
+      </div>
 
       {message && <div style={{ color: "var(--success)", fontSize: "0.875rem", marginBottom: "1rem" }}>{message}</div>}
 
@@ -93,6 +98,7 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           defaultValue={achievement?.actualValue || ""}
                           placeholder="e.g. 95"
                           required={goal.target !== null && goal.uom !== "TIMELINE"}
+                          disabled={goal.isShared || isPending}
                         />
                       </div>
                       <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem" }}>
@@ -111,6 +117,7 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           name="progressStatus" 
                           className={tableStyles.input}
                           defaultValue={achievement?.progressStatus || "NOT_STARTED"}
+                          disabled={goal.isShared || isPending}
                         >
                           <option value="NOT_STARTED">Not Started</option>
                           <option value="ON_TRACK">On Track</option>
@@ -118,10 +125,15 @@ export default function AchievementTracker({ goals }: { goals: Goal[] }) {
                           <option value="AT_RISK">At Risk</option>
                         </select>
                       </div>
-                      <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem" }}>
-                        <button type="submit" className="btn btn-secondary" disabled={isPending} style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem" }}>
+                      <div style={{ flex: "1 1 20%", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                        <button type="submit" className="btn btn-secondary" disabled={isPending || goal.isShared} style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem" }}>
                           <Save size={14} /> {isPending ? "Saving..." : "Save"}
                         </button>
+                        {goal.isShared && (
+                          <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textAlign: "center" }}>
+                            Auto-syncs from Owner
+                          </span>
+                        )}
                       </div>
                     </form>
                   </td>

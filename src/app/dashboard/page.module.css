@@ -38,6 +38,19 @@
   color: var(--text-primary);
 }
 
+.phaseBadge {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.125rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: inline-flex;
+  align-items: center;
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
