@@ -43,6 +43,15 @@ export async function signUpUser(formData: FormData): Promise<{ success?: boolea
       return { error: "System error: No departments found in database to assign to." };
     }
 
+    // Assign a default manager for demo purposes if none is provided
+    let finalManagerId = managerId || null;
+    if (role === "EMPLOYEE" && !finalManagerId) {
+      const defaultManager = await prisma.user.findUnique({
+        where: { email: "manager@atomberg.com" }
+      });
+      finalManagerId = defaultManager?.id || null;
+    }
+
     // Create user
     await prisma.user.create({
       data: {
@@ -51,7 +60,7 @@ export async function signUpUser(formData: FormData): Promise<{ success?: boolea
         password: hashedPassword,
         role,
         departmentId: defaultDept.id,
-        managerId: role === "EMPLOYEE" ? (managerId || null) : null,
+        managerId: finalManagerId,
       }
     });
 
