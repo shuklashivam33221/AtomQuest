@@ -66,7 +66,7 @@ export default function TopNavbar({ userName, userRole, notifications = [] }: To
     <header className={styles.navbar}>
       {/* Left: Logo + Nav Links */}
       <div className={styles.leftSection}>
-        <Link href="/dashboard" className={styles.logo}>
+        <Link href="/" className={styles.logo}>
           <div className={styles.logoIcon}>
             <Target strokeWidth={2.5} />
           </div>

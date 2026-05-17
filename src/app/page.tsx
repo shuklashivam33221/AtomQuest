@@ -32,14 +32,34 @@ export default async function Home() {
 
         <div className={styles.navAuth}>
           {session?.user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
-              <span className={styles.userName}>Hello, {session.user.name}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <Link href="/dashboard" className={styles.signupBtn}>Go to Dashboard</Link>
               <form action={async () => {
                 "use server";
                 await signOut({ redirectTo: "/" });
               }}>
-                <button type="submit" style={{ cursor: "pointer", border: "none", background: "none", padding: 0, color: "var(--text-secondary)", fontWeight: 600, fontSize: "0.875rem" }}>Log Out</button>
+                <button 
+                  type="submit" 
+                  title="Click to Log Out"
+                  style={{ 
+                    cursor: "pointer", 
+                    border: "none", 
+                    background: "var(--primary)", 
+                    color: "#111827",
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    padding: 0,
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                  }}
+                >
+                  {session.user.name ? session.user.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2) : "U"}
+                </button>
               </form>
             </div>
           ) : (
