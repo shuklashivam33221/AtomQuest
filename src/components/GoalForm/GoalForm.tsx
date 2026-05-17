@@ -47,8 +47,8 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
   const [editWeightage, setEditWeightage] = useState<string>("");
 
   const totalWeightage = existingGoals.reduce((sum, g) => sum + g.weightage, 0);
-  const draftGoals = existingGoals.filter((g) => g.status === "DRAFT");
-  const canSubmit = totalWeightage === 100 && draftGoals.length > 0;
+  const editableGoals = existingGoals.filter((g) => g.status === "DRAFT" || g.status === "RETURNED");
+  const canSubmit = totalWeightage === 100 && editableGoals.length > 0;
   const allLocked = existingGoals.length > 0 && existingGoals.every((g) => g.status === "LOCKED" || g.status === "APPROVED");
   const isSubmitted = existingGoals.length > 0 && existingGoals.every((g) => g.status === "SUBMITTED" || g.status === "LOCKED" || g.status === "APPROVED");
 
@@ -202,7 +202,7 @@ export default function GoalForm({ cycleId, existingGoals }: GoalFormProps) {
                   </td>
                   <td><StatusBadge status={goal.status} size="sm" /></td>
                   <td>
-                    {goal.status === "DRAFT" && (
+                    {(goal.status === "DRAFT" || goal.status === "RETURNED") && (
                       <div style={{ display: "flex", gap: "0.5rem" }}>
                         {editingGoalId === goal.id ? (
                           <>

@@ -155,7 +155,7 @@ export async function deleteGoal(goalId: string) {
 
   const goal = await prisma.goal.findUnique({ where: { id: goalId } });
   if (!goal || goal.employeeId !== session.user.id) throw new Error("Unauthorized");
-  if (goal.status !== "DRAFT") throw new Error("Can only delete draft goals");
+  if (goal.status !== "DRAFT" && goal.status !== "RETURNED") throw new Error("Can only delete draft or returned goals");
   if (goal.isShared) throw new Error("Cannot delete shared goals");
 
   await prisma.goal.delete({ where: { id: goalId } });
