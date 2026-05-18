@@ -419,7 +419,7 @@ Open [http://localhost:3000](http://localhost:3000) to access the portal.
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string (Neon recommended) |
+| `DATABASE_URL` | PostgreSQL connection string (Neon recommended). |
 | `AUTH_SECRET` | NextAuth.js session encryption key |
 | `AUTH_MICROSOFT_ENTRA_ID_ID` | Azure AD application client ID |
 | `AUTH_MICROSOFT_ENTRA_ID_SECRET` | Azure AD application client secret |
