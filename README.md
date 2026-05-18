@@ -473,5 +473,5 @@ atomquest/
 
 <p align="center">
   <strong>Built with ❤️ by Shivam Shukla</strong><br/>
-  <sub>AtomQuest Hackathon 1.0 · May 2026</sub>
+  <sub>AtomQuest Hackathon · May 2026</sub>
 </p>
